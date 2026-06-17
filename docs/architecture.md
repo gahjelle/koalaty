@@ -77,7 +77,7 @@ So `run = invoke + harvest`; manual `start`/`harvest` = `harvest` alone.
 
 Files-first; the query index is derived and disposable (see [ADR-0002](./adr/0002-files-source-of-truth-derived-index.md)):
 
-- One **directory per run**, keyed by a self-describing **run ID** (`<date>-<task>-<harness>-<model>-<shortid>`). Holds raw harvested artifacts + normalized **`result.json`** (the source of truth).
+- One **directory per run**, keyed by a self-describing **run ID** (`<task>-<harness>-<model>-<date>-<shortid>`; see [ADR-0003](./adr/0003-run-id-ordering-and-canonical-names.md)). Holds raw harvested artifacts + normalized **`result.json`** (the source of truth).
 - A **pending run** exists between `start` and `harvest`.
 - The **index** (SQLite/DuckDB) is rebuilt from `result.json` files — never authoritative, not git-tracked.
 - The pouch is a separate, configurable location (koalaty is the tool; the pouch is the user's data).

@@ -11,3 +11,7 @@ Default label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `read
 ### Domain docs
 
 Single-context layout — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Engineering
+
+- **Git workflow** — branch per issue, regular commits, PR squash-merged by the maintainer. See `docs/agents/git-workflow.md`.

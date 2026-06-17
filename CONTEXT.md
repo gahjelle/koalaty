@@ -25,7 +25,7 @@ Reading a finished session by its ID from a harness's local storage and normaliz
 _Avoid_: collect, ingest, import, scrape
 
 **session**:
-A harness's *own* unit of work, addressed by its session ID. Koalaty harvests a session into a [[result]]; "session" stays harness-side and is never used for koalaty's own records.
+A harness's *own* unit of work, addressed by its session ID. Koalaty harvests a session into a **result**; "session" stays harness-side and is never used for koalaty's own records.
 _Avoid_: (don't use this word for koalaty's run or result)
 
 ## Core nouns
@@ -39,7 +39,7 @@ The text pasted into the harness to start a session. A field inside a **task**, 
 _Avoid_: instruction, query
 
 **example task**:
-A real, ordinary task bundled with koalaty for onboarding, copied into the user's `tasks/` as a starting point. Running one produces a real result — an example task is *not* a [[joey]].
+A real, ordinary task bundled with koalaty for onboarding, copied into the user's `tasks/` as a starting point. Running one produces a real result — an example task is *not* a **joey**.
 _Avoid_: sample, demo, template
 
 **drop-bear**:
@@ -65,6 +65,14 @@ _Avoid_: mode, runner, source
 **gum**:
 The starting fixture a task runs against — the repo state / environment ("which tree are we running in"): inline files, or a git URL + pinned commit. Part of the **task**.
 _Avoid_: fixture, setup, env, sandbox
+
+**run id**:
+The self-describing label naming a **run**'s directory in the **pouch**: `<task>-<harness>-<model>-<date>-<shortid>` (e.g. `quokka-fake-opus48-20260618-a1b2c3`). A human-readable label only — `result.json` is authoritative; code never parses the id for information (see [ADR-0003](docs/adr/0003-run-id-ordering-and-canonical-names.md)).
+_Avoid_: run name, slug, key
+
+**canonical name**:
+The short, dash-free slug koalaty uses for a **harness** (`claudecode`, `copilot`, `codex`, `opencode`, `fake`) or a model (`opus48`, `sonnet46`, `glm51`, `gpt55`, `gpt53codex`, …). Keeps each **run id** field unambiguous. Harness names are bounded by which **adapters** exist; model names match `^[a-z0-9]+$` with no central registry.
+_Avoid_: short name, alias, slug (use this term)
 
 ## Evaluation
 
