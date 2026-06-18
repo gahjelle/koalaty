@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from koalaty.models import FrozenModel
+from koalaty.tasks import Turns
 
 SCHEMA_VERSION = 1
 
@@ -32,3 +33,5 @@ class Result(FrozenModel):
     finished_at: datetime
     outcome: Outcome
     summary: str
+    tags: list[str]
+    turns: Turns

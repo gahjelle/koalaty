@@ -52,14 +52,18 @@ A **task** is the bundle koalaty owns and holds fixed across models. Plain files
 
 ```
 tasks/<id>/
-  task.toml      # turns (one-shot|scripted|interactive), tags (drop-bear…), gum pointer
-  prompt.md      # the prompt text to paste/send
+  task.toml      # turns (one-shot|scripted|interactive), tags (drop-bear…), [gum] pointer
+  prompt.md      # the prompt text to paste/send; for scripted, turns are split on bare `---` lines
   done.md        # prose stopping-guidance (matters most for interactive)
-  turns.md       # scripted follow-up turns, separated by `---` on its own line (scripted only)
   gum/           # starting fixture: inline files, or pointer to git URL + pinned commit
   tests/         # mechanical eval assets
   rubric.md      # rubric criteria
 ```
+
+Required files are `task.toml` + `prompt.md`; the rest are optional (absent ⇒
+empty/none). A `scripted` prompt splits into its ordered turn list on lines that
+are exactly `---`; `one-shot`/`interactive` keep the whole file as one literal
+prompt. There is no `turns.md`.
 
 - **`turns`** sets turn structure and (with harness capability) determines the driver: `one-shot`/`scripted` → automated; `interactive` → manual-only.
 - **drop-bear** is a task tag (adversarial). **Example tasks** ship in-package and are copied into `tasks/` — they are real tasks, not joeys.

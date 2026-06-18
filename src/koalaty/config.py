@@ -4,10 +4,12 @@ from pathlib import Path
 
 import cyclopts
 
-# Pouch precedence: `--pouch` → `KOALATY_POUCH` env → `./pouch/`.
-# `command=False` keeps the env var `KOALATY_POUCH` (not per-command).
+# Location precedence: `--pouch`/`--tasks` → `KOALATY_*` env → the defaults.
+# `command=False` keeps the env vars (`KOALATY_POUCH`, `KOALATY_TASKS`) global,
+# not per-command.
 POUCH_ENV = cyclopts.config.Env("KOALATY_", command=False)
 DEFAULT_POUCH = Path("pouch")
+DEFAULT_TASKS = Path("tasks")
 
 
 def derive_driver(*, can_invoke: bool, interactive: bool) -> str:

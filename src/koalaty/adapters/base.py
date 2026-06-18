@@ -1,10 +1,13 @@
 """The adapter seam: the harness-normalized session and the adapter protocols."""
 
 from datetime import datetime
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from koalaty.models import FrozenModel
 from koalaty.result import Outcome
+
+if TYPE_CHECKING:
+    from koalaty.tasks import Task
 
 
 class HarvestedSession(FrozenModel):
@@ -45,5 +48,5 @@ class InvocableAdapter(Adapter, Protocol):
     whether a harness supports automated invocation.
     """
 
-    def invoke(self, task: str, model: str) -> str:
+    def invoke(self, task: Task, model: str) -> str:
         """Start a session for `task` with `model`; return its session id."""

@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid
 from koalaty.result import Outcome, Result
+from koalaty.tasks import Turns
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     import pytest
     from cyclopts import App
+    from tests.conftest import TaskWriter
 
 _TS = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -27,6 +29,8 @@ def _result(model: str, harness: str, outcome: Outcome, task: str = "quokka") ->
         finished_at=_TS,
         outcome=outcome,
         summary="s",
+        tags=[],
+        turns=Turns.one_shot,
     )
 
 
@@ -51,14 +55,29 @@ def test_build_grid_tallies_per_model_harness() -> None:
 def test_compare_prints_grid(
     app: App,
     tmp_path: Path,
+    make_task: TaskWriter,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Compare prints a grid titled with the task for runs in the pouch."""
-    pouch = str(tmp_path)
-    app(["run", "quokka", "--harness", "fake", "--model", "opus48", "--pouch", pouch])
+    pouch = tmp_path / "pouch"
+    tasks = make_task(tmp_path / "tasks", "quokka")
+    app(
+        [
+            "run",
+            "quokka",
+            "--harness",
+            "fake",
+            "--model",
+            "opus48",
+            "--pouch",
+            str(pouch),
+            "--tasks",
+            str(tasks),
+        ]
+    )
     capsys.readouterr()
 
-    app(["compare", "--pouch", str(tmp_path)])
+    app(["compare", "--pouch", str(pouch)])
     out = capsys.readouterr().out
     assert "quokka" in out
     assert "opus48" in out
