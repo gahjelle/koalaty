@@ -1,22 +1,29 @@
 default: check
 
+# Run all quality gates in order, stopping on the first failure.
 check: fmt-check lint typecheck test
 
+# Auto-format the codebase with ruff.
 fmt:
-    @uv run ruff format
+    @uv run ruff format -q
 
+# Check formatting without writing changes.
 fmt-check:
-    @uv run ruff format --check
+    @uv run ruff format --check -q
 
+# Lint the codebase with ruff.
 lint:
-    @uv run ruff check
+    @uv run ruff check -q
 
+# Type-check src/ and tests/ with ty.
 typecheck:
-    @uv run ty check
+    @uv run ty check -q
 
+# Run the test suite quietly.
 test:
     @uv run pytest -q
 
+# Auto-fix lint issues then reformat.
 fix:
-    @uv run ruff check --fix
-    @uv run ruff format
+    @uv run ruff check --fix -q
+    @uv run ruff format -q
