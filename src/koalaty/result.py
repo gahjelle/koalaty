@@ -1,6 +1,6 @@
 """Result types: the minimal `result.json` schema and its outcome enum."""
 
-from datetime import datetime  # noqa: TC003  (pydantic needs the runtime type)
+from datetime import datetime
 from enum import StrEnum
 
 from koalaty.models import FrozenModel

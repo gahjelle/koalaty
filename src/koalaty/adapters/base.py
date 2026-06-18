@@ -1,10 +1,10 @@
 """The adapter seam: the harness-normalized session and the adapter protocol."""
 
-from datetime import datetime  # noqa: TC003  (pydantic needs the runtime type)
+from datetime import datetime
 from typing import Any, Protocol, runtime_checkable
 
 from koalaty.models import FrozenModel
-from koalaty.result import Outcome  # noqa: TC001 — pydantic resolves this at runtime
+from koalaty.result import Outcome
 
 
 class HarvestedSession(FrozenModel):

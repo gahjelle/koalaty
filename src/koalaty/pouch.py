@@ -6,8 +6,6 @@ only a label and is never parsed for information (ADR-0003).
 """
 
 import json
-from datetime import datetime  # noqa: TC003  (used at runtime by mint_run_id)
-from pathlib import Path  # noqa: TC003  (used at runtime by the I/O helpers)
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
@@ -15,6 +13,8 @@ from koalaty.result import Result
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+    from datetime import datetime
+    from pathlib import Path
 
 _RESULT_FILE = "result.json"
 _RAW_SESSION_FILE = "raw/session.json"
