@@ -1,6 +1,4 @@
-"""Tests for the comparison grid and the ``compare`` command."""
-
-from __future__ import annotations
+"""Tests for the comparison grid and the `compare` command."""
 
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
@@ -11,6 +9,7 @@ from koalaty.result import Outcome, Result
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import pytest
     from cyclopts import App
 
 _TS = datetime(2026, 1, 1, tzinfo=UTC)
@@ -49,7 +48,11 @@ def test_build_grid_tallies_per_model_harness() -> None:
     assert grid.harnesses == ["fake"]
 
 
-def test_compare_prints_grid(app: App, tmp_path: Path, capsys) -> None:  # noqa: ANN001
+def test_compare_prints_grid(
+    app: App,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Compare prints a grid titled with the task for runs in the pouch."""
     pouch = str(tmp_path)
     app(["run", "quokka", "--harness", "fake", "--model", "opus48", "--pouch", pouch])
@@ -62,7 +65,11 @@ def test_compare_prints_grid(app: App, tmp_path: Path, capsys) -> None:  # noqa:
     assert "fake" in out
 
 
-def test_compare_friendly_when_empty(app: App, tmp_path: Path, capsys) -> None:  # noqa: ANN001
+def test_compare_friendly_when_empty(
+    app: App,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Compare reports a friendly message when the pouch has no runs."""
     app(["compare", "--pouch", str(tmp_path)])
     out = capsys.readouterr().out

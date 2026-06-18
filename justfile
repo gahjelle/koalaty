@@ -1,7 +1,7 @@
 default: check
 
 # Run all quality gates in order, stopping on the first failure.
-check: fmt-check lint conventions typecheck test 
+check: fmt-check lint conventions typecheck test
 
 # Auto-format the codebase with ruff.
 fmt:

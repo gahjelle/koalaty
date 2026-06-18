@@ -19,10 +19,10 @@
 Some conventions can't be expressed in ruff or ty, so they live in a small
 in-repo linter, `src/tools/repolint.py` (the `tools` package sits beside
 `koalaty` under `src/` so it imports without any path juggling), wired into
-`just check` (the `conventions` gate). It runs over `src/` and reports `KOA`
-codes. Run it directly with `uv run python -m tools.repolint [paths...]`;
-`--fix` applies the safe textual fixes (KOA001 and KOA004). Each rule and how to
-satisfy it:
+`just check` (the `conventions` gate). It runs over `src/` and `tests/` and
+reports `KOA` codes. Run it directly with `uv run python -m tools.repolint
+[paths...]`; `--fix` applies the safe textual fixes (KOA001 and KOA004). Each
+rule and how to satisfy it:
 
 - **KOA001 — no `from __future__ import annotations`.** Python 3.14 evaluates
   annotations lazily (PEP 649), so the import is dead weight. Delete it; quote

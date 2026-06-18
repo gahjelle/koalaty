@@ -10,6 +10,8 @@
 
 A slice is not done until `just check` is green. CI mirrors these exact commands on every push and pull request, so a green CI means the same gate passed remotely.
 
+Justfile recipes echo their commands (no `@` prefix) so each gate prints the exact tool invocation it runs — less silent, but makes failures in CI logs immediately traceable to the failing command.
+
 ## Quick fixes
 
 - Auto-format: `just fmt`

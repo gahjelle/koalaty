@@ -14,6 +14,7 @@ from rich.console import Console
 
 from koalaty import pouch
 from koalaty.adapters import get_adapter, known_harnesses
+from koalaty.adapters.base import InvocableAdapter
 from koalaty.compare import build_grid, render_grid
 from koalaty.config import DEFAULT_POUCH, POUCH_ENV, derive_driver
 from koalaty.result import Result
@@ -68,13 +69,17 @@ def run(
         msg = f"unknown harness {harness!r}"
         raise ValueError(msg)
 
+    if not isinstance(adapter, InvocableAdapter):
+        msg = f"harness {harness!r} does not support headless invocation"
+        raise TypeError(msg)
+
     started = datetime.now(UTC)
     run_id = pouch.new_run_id(pouch_dir, task, harness, model, started)
 
     session_id = adapter.invoke(task, model)
     harvested = adapter.harvest(session_id)
 
-    driver = derive_driver(can_invoke=hasattr(adapter, "invoke"), interactive=False)
+    driver = derive_driver(can_invoke=True, interactive=False)
     result = Result(
         run_id=run_id,
         task=task,

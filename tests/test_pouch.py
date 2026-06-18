@@ -1,7 +1,5 @@
 """Focused unit tests for run-id minting and collision regeneration."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 from koalaty.pouch import mint_run_id

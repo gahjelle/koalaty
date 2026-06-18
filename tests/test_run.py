@@ -1,6 +1,4 @@
-"""End-to-end tests of the ``run`` command driving the fake adapter."""
-
-from __future__ import annotations
+"""End-to-end tests of the `run` command driving the fake adapter."""
 
 import json
 import re
@@ -24,7 +22,7 @@ def run_args(
     harness: str = "fake",
     model: str = "opus48",
 ) -> list[str]:
-    """Build the argv for a ``run`` invocation against ``pouch``."""
+    """Build the argv for a `run` invocation against `pouch`."""
     return [
         "run",
         task,
@@ -55,7 +53,7 @@ def test_run_writes_result_and_raw_session(app: App, tmp_path: Path) -> None:
 
 
 def test_run_id_follows_canonical_format(app: App, tmp_path: Path) -> None:
-    """The run id matches ``quokka-fake-opus48-<YYYYMMDD>-<6hex>``."""
+    """The run id matches `quokka-fake-opus48-<YYYYMMDD>-<6hex>`."""
     run_id = app(run_args(tmp_path))
     assert RUN_ID_RE.fullmatch(run_id)
 

@@ -9,7 +9,7 @@ Encodes the rules in the `repo-coding-conventions` policy:
   KOA005  homogeneous sequences use `list`, not `tuple[T, ...]`
   KOA006  return `Self`, never a string forward-ref to the enclosing class
 
-Run: `uv run python -m tools.repolint [paths...]` (defaults to the package sources).
+Run: `uv run python -m tools.repolint [paths...]` (defaults to `src/` and `tests/`).
 Pass `--fix` to auto-apply the safe textual fixes (KOA001, KOA004).
 """
 
@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-DEFAULT_PATHS = ["src/"]
+DEFAULT_PATHS = ["src/", "tests/"]
 DOUBLE_BACKTICK = "`" * 2
 FUTURE_ANNOTATIONS = "from __future__ import annotations"
 

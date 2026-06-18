@@ -2,13 +2,18 @@
 
 from pathlib import Path
 
-from tools.repolint import check_source, fix_source
+from tools.repolint import DEFAULT_PATHS, check_source, fix_source
 
 HERE = Path("sample.py")
 
 
 def _codes(source: str) -> set[str]:
     return {v.code for v in check_source(source, HERE)}
+
+
+def test_default_paths_cover_src_and_tests() -> None:
+    """The default lint scope covers package sources and tests equally."""
+    assert DEFAULT_PATHS == ["src/", "tests/"]
 
 
 def test_clean_source_has_no_violations() -> None:

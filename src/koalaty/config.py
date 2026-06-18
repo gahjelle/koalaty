@@ -4,8 +4,8 @@ from pathlib import Path
 
 import cyclopts
 
-# Pouch precedence: ``--pouch`` → ``KOALATY_POUCH`` env → ``./pouch/``.
-# ``command=False`` keeps the env var ``KOALATY_POUCH`` (not per-command).
+# Pouch precedence: `--pouch` → `KOALATY_POUCH` env → `./pouch/`.
+# `command=False` keeps the env var `KOALATY_POUCH` (not per-command).
 POUCH_ENV = cyclopts.config.Env("KOALATY_", command=False)
 DEFAULT_POUCH = Path("pouch")
 
