@@ -1,7 +1,5 @@
 """Configuration: pouch-location binding and driver derivation."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import cyclopts
@@ -13,10 +11,10 @@ DEFAULT_POUCH = Path("pouch")
 
 
 def derive_driver(*, can_invoke: bool, interactive: bool) -> str:
-    """Derive who steers a session: ``koalaty`` (automated) or ``human``.
+    """Derive who steers a session: `koalaty` (automated) or `human`.
 
     A run is human-driven when the task needs interactive judgment or the
-    harness has no headless ``invoke``; otherwise koalaty drives it.
+    harness has no headless `invoke`; otherwise koalaty drives it.
     """
     if interactive or not can_invoke:
         return "human"

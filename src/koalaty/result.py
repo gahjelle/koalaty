@@ -1,11 +1,9 @@
-"""Result types: the minimal ``result.json`` schema and its outcome enum."""
-
-from __future__ import annotations
+"""Result types: the minimal `result.json` schema and its outcome enum."""
 
 from datetime import datetime  # noqa: TC003  (pydantic needs the runtime type)
 from enum import StrEnum
 
-from pydantic import BaseModel
+from koalaty.models import FrozenModel
 
 SCHEMA_VERSION = 1
 
@@ -17,8 +15,8 @@ class Outcome(StrEnum):
     failure = "failure"
 
 
-class Result(BaseModel):
-    """The normalized, stored record a run produces, serialized as ``result.json``.
+class Result(FrozenModel):
+    """The normalized, stored record a run produces, serialized as `result.json`.
 
     Authoritative source of every run field; the run-id directory name is only a
     human-readable label and is never parsed for information (see ADR-0003).

@@ -1,7 +1,5 @@
 """The fake adapter: a hermetic harness needing no real CLI and no interaction."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -17,8 +15,8 @@ _FAKE_FINISHED_AT = datetime(2026, 1, 1, 12, 1, 30, tzinfo=UTC)
 class FakeAdapter:
     """An adapter that fabricates sessions in memory, walking invoke → harvest.
 
-    Real adapters slot in unchanged: ``invoke`` returns a session id that
-    ``harvest`` later resolves, exactly as a real harness round-trip would.
+    Real adapters slot in unchanged: `invoke` returns a session id that
+    `harvest` later resolves, exactly as a real harness round-trip would.
     """
 
     name = "fake"
@@ -28,7 +26,7 @@ class FakeAdapter:
         self._sessions: dict[str, dict[str, Any]] = {}
 
     def invoke(self, task: str, model: str) -> str:
-        """Fabricate a canned session for ``task``/``model``; return its id."""
+        """Fabricate a canned session for `task`/`model`; return its id."""
         session_id = uuid4().hex
         self._sessions[session_id] = {
             "task": task,

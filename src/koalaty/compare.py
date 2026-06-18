@@ -1,7 +1,5 @@
 """Comparison: build a (model x harness) grid per task and render it."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -24,7 +22,7 @@ class Tally:
     failure: int = 0
 
     def add(self, outcome: Outcome) -> Tally:
-        """Return a new tally with ``outcome`` counted in."""
+        """Return a new tally with `outcome` counted in."""
         if outcome is Outcome.success:
             return Tally(self.success + 1, self.failure)
         return Tally(self.success, self.failure + 1)
@@ -32,7 +30,7 @@ class Tally:
 
 @dataclass
 class Grid:
-    """A single task's comparison grid: ``(model, harness) -> Tally``."""
+    """A single task's comparison grid: `(model, harness) -> Tally`."""
 
     task: str
     tallies: dict[tuple[str, str], Tally] = field(default_factory=dict)
@@ -49,7 +47,7 @@ class Grid:
 
 
 def build_grid(results: Iterable[Result], task: str) -> Grid:
-    """Tally the results for ``task`` into a (model x harness) grid (pure)."""
+    """Tally the results for `task` into a (model x harness) grid (pure)."""
     tallies: dict[tuple[str, str], Tally] = defaultdict(Tally)
     for result in results:
         if result.task != task:
@@ -71,7 +69,7 @@ def _render_cell(tally: Tally | None) -> str:
 
 
 def render_grid(grid: Grid) -> Table:
-    """Render ``grid`` as a rich table: rows = models, columns = harnesses."""
+    """Render `grid` as a rich table: rows = models, columns = harnesses."""
     table = Table(title=grid.task)
     table.add_column("model")
     harnesses = grid.harnesses

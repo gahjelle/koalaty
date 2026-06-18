@@ -1,7 +1,5 @@
 """Adapters package: the adapter protocol and its harness registry."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from koalaty.adapters.fake import FakeAdapter
@@ -19,6 +17,6 @@ def known_harnesses() -> list[str]:
 
 
 def get_adapter(harness: str) -> Adapter | None:
-    """Return a fresh adapter for ``harness``, or ``None`` if unregistered."""
+    """Return a fresh adapter for `harness`, or `None` if unregistered."""
     adapter_cls = _REGISTRY.get(harness)
     return adapter_cls() if adapter_cls is not None else None

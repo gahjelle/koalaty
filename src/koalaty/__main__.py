@@ -1,7 +1,5 @@
 """Entry point for the koalaty CLI."""
 
-from __future__ import annotations
-
 from koalaty.cli.main import build_app
 
 

@@ -4,8 +4,6 @@ The CLI layer stays thin: validation and the run-assembly orchestrator live
 here, but all real logic lives in the domain modules they call.
 """
 
-from __future__ import annotations
-
 import re
 from datetime import UTC, datetime
 from pathlib import Path
