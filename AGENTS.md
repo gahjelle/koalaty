@@ -17,3 +17,6 @@ Single-context layout — one `CONTEXT.md` + `docs/adr/` at the repo root. See `
 When implementing an issue: branch off `main` (`agent/<issue#>-<slug>`), work **test-first using the `tdd` skill**, **tick the issue's checklist** as each item is done and verified, keep `just check` green, and open a PR that the maintainer squash-merges. Full procedure in `docs/agents/git-workflow.md`.
 
 - **Git workflow & issue procedure** — `docs/agents/git-workflow.md`.
+- **Code conventions** — `docs/agents/code-conventions.md`.
+- **Quality gates** — `docs/agents/quality-gates.md`.
+- **Testing** — `docs/agents/testing.md`.

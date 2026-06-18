@@ -1,3 +1,6 @@
+# Koalaty run data (ADR-0002: user data, never committed)
+/pouch/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -1,0 +1,1 @@
+"""Base adapter interface."""
