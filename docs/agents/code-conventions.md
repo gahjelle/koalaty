@@ -4,7 +4,7 @@
 
 - Python 3.14, managed by **uv**.
 - Install deps: `uv sync`. Run tools: `uv run <tool>`.
-- Source layout: `src/koalaty/` for application code, `tests/` for tests.
+- Source layout: `src/koalaty/` for application code, `src/tools/` for repo dev tooling (e.g. the convention linter), `tests/` for tests.
 
 ## Linting and formatting
 
@@ -13,6 +13,41 @@
 - Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this).
 - Full **type annotations** are required on all public APIs (ruff `ANN` rules enforce this).
 - Never blanket-ignore the linter with `# noqa` — fix the issue or use a targeted `# noqa: CODE` with a comment explaining why.
+
+## Repo conventions (`repolint`)
+
+Some conventions can't be expressed in ruff or ty, so they live in a small
+in-repo linter, `src/tools/repolint.py` (the `tools` package sits beside
+`koalaty` under `src/` so it imports without any path juggling), wired into
+`just check` (the `conventions` gate). It runs over `src/` and reports `KOA`
+codes. Run it directly with `uv run python -m tools.repolint [paths...]`;
+`--fix` applies the safe textual fixes (KOA001 and KOA004). Each rule and how to
+satisfy it:
+
+- **KOA001 — no `from __future__ import annotations`.** Python 3.14 evaluates
+  annotations lazily (PEP 649), so the import is dead weight. Delete it; quote
+  any annotation that genuinely needs deferring, or guard the import under
+  `if TYPE_CHECKING:`.
+- **KOA002 — Pydantic models inherit `FrozenModel`, never `BaseModel` directly.**
+  We don't get `FrozenModel` from a library — it's a thin project base class:
+  a `pydantic.BaseModel` whose `model_config` forbids extra fields and freezes
+  instances. Define it once and inherit it everywhere:
+  ```python
+  from pydantic import BaseModel, ConfigDict
+
+  class FrozenModel(BaseModel):
+      """Immutable, strict base for every koalaty model."""
+
+      model_config = ConfigDict(extra="forbid", frozen=True)
+  ```
+  `FrozenModel` itself is the one class allowed to subclass `BaseModel`.
+- **KOA003 — `Protocol` methods omit the `...` body.** The docstring is body
+  enough; drop the trailing `...`.
+- **KOA004 — docstrings use single backticks, never double.** Write `` `code` ``,
+  not ` ``code`` ` (the linter's `--fix` collapses these automatically).
+- **KOA005 — homogeneous sequences use `list[T]`, not `tuple[T, ...]`.**
+- **KOA006 — return `Self`, never a string forward-ref to the enclosing class.**
+  Import `Self` from `typing` and annotate `-> Self` instead of `-> "Thing"`.
 
 ## Style
 

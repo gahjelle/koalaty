@@ -4,8 +4,9 @@
 
 1. `just fmt-check` — `uv run ruff format --check`
 2. `just lint` — `uv run ruff check`
-3. `just typecheck` — `uv run ty check` (covers `src/` and `tests/`)
-4. `just test` — `uv run pytest -q`
+3. `just conventions` — `uv run python -m tools.repolint` (repo-specific `KOA` rules ruff/ty can't express; see [code-conventions.md](./code-conventions.md#repo-conventions-repolint))
+4. `just typecheck` — `uv run ty check` (covers `src/` and `tests/`)
+5. `just test` — `uv run pytest -q`
 
 A slice is not done until `just check` is green. CI mirrors these exact commands on every push and pull request, so a green CI means the same gate passed remotely.
 
@@ -13,6 +14,7 @@ A slice is not done until `just check` is green. CI mirrors these exact commands
 
 - Auto-format: `just fmt`
 - Lint fix: `just fix` (runs `ruff check --fix` then `ruff format`)
+- Convention fix: `uv run python -m tools.repolint --fix` (safe textual fixes for KOA001 and KOA004 only)
 
 ## Pre-commit hooks
 
