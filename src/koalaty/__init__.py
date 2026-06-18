@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from koalaty!")
+"""Koalaty: evaluate and compare models inside agent harnesses."""
