@@ -1,11 +1,10 @@
 """CLI definition and the thin run/compare orchestration.
 
-The CLI layer stays thin: validation and the run-assembly orchestrator live
-here, but all real logic lives in the domain modules they call.
+The CLI layer stays thin: CLI-level input validation lives here, but all
+domain logic lives in the modules it calls.
 """
 
 import re
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -13,38 +12,36 @@ from cyclopts import App, Parameter
 from rich.console import Console
 
 from koalaty import pouch
-from koalaty.adapters import get_adapter, known_harnesses
-from koalaty.adapters.base import InvocableAdapter
+from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
-from koalaty.config import DEFAULT_POUCH, POUCH_ENV, derive_driver
-from koalaty.result import Result
-from koalaty.tasks import BUNDLED_TASKS, is_known_task
+from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV
+from koalaty.runs import run_automated
+from koalaty.tasks import load_task
 
-_MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
+__all__ = ["build_app", "compare", "run"]
+
+MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
 
 PouchOption = Annotated[
     Path,
     Parameter(name="--pouch", help="Pouch directory (results store)."),
 ]
 
+TasksOption = Annotated[
+    Path,
+    Parameter(name="--tasks", help="Tasks directory (task bundles)."),
+]
 
-def _validate_model(_type: type, value: str) -> None:
+
+def validate_model(_type: type, value: str) -> None:
     """Reject model names that are not dash-free canonical slugs."""
-    if not _MODEL_PATTERN.fullmatch(value):
-        pattern = _MODEL_PATTERN.pattern
+    if not MODEL_PATTERN.fullmatch(value):
+        pattern = MODEL_PATTERN.pattern
         msg = f"model {value!r} must match {pattern} (a-z, 0-9; no dashes)"
         raise ValueError(msg)
 
 
-def _validate_task(_type: type, value: str) -> None:
-    """Reject task ids that are not bundled."""
-    if not is_known_task(value):
-        known = ", ".join(sorted(BUNDLED_TASKS))
-        msg = f"unknown task {value!r}; bundled tasks: {known}"
-        raise ValueError(msg)
-
-
-def _validate_harness(_type: type, value: str) -> None:
+def validate_harness(_type: type, value: str) -> None:
     """Reject harnesses without a registered adapter."""
     if value not in known_harnesses():
         known = ", ".join(known_harnesses())
@@ -53,47 +50,21 @@ def _validate_harness(_type: type, value: str) -> None:
 
 
 def run(
-    task: Annotated[str, Parameter(validator=_validate_task)],
+    task: str,
     *,
-    harness: Annotated[str, Parameter(validator=_validate_harness)],
-    model: Annotated[str, Parameter(validator=_validate_model)],
+    harness: Annotated[str, Parameter(validator=validate_harness)],
+    model: Annotated[str, Parameter(validator=validate_model)],
     pouch_dir: PouchOption = DEFAULT_POUCH,
+    tasks_dir: TasksOption = DEFAULT_TASKS,
 ) -> str:
     """Run a task on a model in a harness and store the result in the pouch.
 
-    Validates inputs, invokes the harness, harvests the session, assembles the
-    result, and writes its run directory. Returns and prints the new run id.
+    Loads the task from disk, delegates to run_automated for the full
+    pipeline, and returns the new run id.
     """
-    adapter = get_adapter(harness)
-    if adapter is None:  # pragma: no cover - guarded by _validate_harness
-        msg = f"unknown harness {harness!r}"
-        raise ValueError(msg)
-
-    if not isinstance(adapter, InvocableAdapter):
-        msg = f"harness {harness!r} does not support headless invocation"
-        raise TypeError(msg)
-
-    started = datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task, harness, model, started)
-
-    session_id = adapter.invoke(task, model)
-    harvested = adapter.harvest(session_id)
-
-    driver = derive_driver(can_invoke=True, interactive=False)
-    result = Result(
-        run_id=run_id,
-        task=task,
-        harness=harness,
-        model=model,
-        driver=driver,
-        started_at=harvested.started_at,
-        finished_at=harvested.finished_at,
-        outcome=harvested.outcome,
-        summary=harvested.summary,
-    )
-    pouch.write_run(pouch_dir, result, harvested.raw)
-
-    return run_id
+    loaded = load_task(tasks_dir, task)
+    result = run_automated(loaded, harness, model, pouch_dir)
+    return result.run_id
 
 
 def compare(

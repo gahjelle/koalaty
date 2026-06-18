@@ -52,7 +52,7 @@ A **task** is the bundle koalaty owns and holds fixed across models. Plain files
 
 ```
 tasks/<id>/
-  task.toml      # turns (one-shot|scripted|interactive), tags (drop-bear…), gum pointer
+  task.toml      # turns (one-shot|scripted|interactive), tags (drop-bear…), [gum] pointer
   prompt.md      # the prompt; for scripted tasks, all turns in order separated by a `---` line
   done.md        # prose stopping-guidance (matters most for interactive)
   gum/           # starting fixture: inline files, or pointer to git URL + pinned commit

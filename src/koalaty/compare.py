@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING
 
 from rich.table import Table
 
-from koalaty.result import Outcome
+from koalaty.schemas.result import Outcome
+
+__all__ = ["Grid", "Tally", "build_grid", "render_grid"]
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from koalaty.result import Result
+    from koalaty.schemas.result import Result
 
 
 @dataclass(frozen=True)
@@ -57,7 +59,7 @@ def build_grid(results: Iterable[Result], task: str) -> Grid:
     return Grid(task=task, tallies=dict(tallies))
 
 
-def _render_cell(tally: Tally | None) -> str:
+def render_cell(tally: Tally | None) -> str:
     """Render a cell: colored tally, or a dim dash for an empty combo."""
     if tally is None:
         return "[dim]–[/dim]"  # noqa: RUF001 — en dash is the intended empty-cell glyph
@@ -77,7 +79,7 @@ def render_grid(grid: Grid) -> Table:
         table.add_column(harness)
     for model in grid.models:
         cells = [
-            _render_cell(grid.tallies.get((model, harness))) for harness in harnesses
+            render_cell(grid.tallies.get((model, harness))) for harness in harnesses
         ]
         table.add_row(model, *cells)
     return table

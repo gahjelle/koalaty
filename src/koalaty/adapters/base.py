@@ -1,24 +1,13 @@
 """The adapter seam: the harness-normalized session and the adapter protocols."""
 
-from datetime import datetime
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from koalaty.models import FrozenModel
-from koalaty.result import Outcome
+from koalaty.schemas.adapters import HarvestedSession
 
+if TYPE_CHECKING:
+    from koalaty.schemas.tasks import Task
 
-class HarvestedSession(FrozenModel):
-    """A harness session normalized by an adapter, free of any run identity.
-
-    Carries only what the harness reported; the orchestrator supplies run-id,
-    task, harness, model, and the derived driver when assembling the result.
-    """
-
-    started_at: datetime
-    finished_at: datetime
-    outcome: Outcome
-    summary: str
-    raw: dict[str, Any]
+__all__ = ["Adapter", "HarvestedSession", "InvocableAdapter"]
 
 
 @runtime_checkable
@@ -45,5 +34,5 @@ class InvocableAdapter(Adapter, Protocol):
     whether a harness supports automated invocation.
     """
 
-    def invoke(self, task: str, model: str) -> str:
+    def invoke(self, task: Task, model: str) -> str:
         """Start a session for `task` with `model`; return its session id."""

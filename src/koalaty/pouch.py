@@ -6,21 +6,23 @@ only a label and is never parsed for information (ADR-0003).
 """
 
 import json
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from koalaty.result import Result
+from koalaty.schemas.result import Result
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
-    from datetime import datetime
-    from pathlib import Path
 
-_RESULT_FILE = "result.json"
-_RAW_SESSION_FILE = "raw/session.json"
+__all__ = ["mint_run_id", "new_run_id", "read_results", "write_run"]
+
+RESULT_FILE = "result.json"
+RAW_SESSION_FILE = "raw/session.json"
 
 
-def _default_shortid() -> str:
+def default_shortid() -> str:
     """Return a fresh 6-hex-character short id."""
     return uuid4().hex[:6]
 
@@ -32,7 +34,7 @@ def mint_run_id(  # noqa: PLR0913 — is_taken/new_shortid are injected test sea
     *,
     now: datetime,
     is_taken: Callable[[str], bool],
-    new_shortid: Callable[[], str] = _default_shortid,
+    new_shortid: Callable[[], str] = default_shortid,
 ) -> str:
     """Mint a run id `<task>-<harness>-<model>-<YYYYMMDD>-<shortid>`.
 
@@ -64,10 +66,10 @@ def write_run(pouch: Path, result: Result, raw: dict[str, Any]) -> Path:
     """
     run_dir = pouch / result.run_id
     (run_dir / "raw").mkdir(parents=True, exist_ok=True)
-    (run_dir / _RESULT_FILE).write_text(
+    (run_dir / RESULT_FILE).write_text(
         result.model_dump_json(indent=2) + "\n", encoding="utf-8"
     )
-    (run_dir / _RAW_SESSION_FILE).write_text(
+    (run_dir / RAW_SESSION_FILE).write_text(
         json.dumps(raw, indent=2) + "\n", encoding="utf-8"
     )
     return run_dir
@@ -77,7 +79,7 @@ def read_results(pouch: Path) -> list[Result]:
     """Load every `result.json` under `pouch` (empty if the pouch is absent)."""
     if not pouch.exists():
         return []
-    paths: Iterable[Path] = sorted(pouch.glob(f"*/{_RESULT_FILE}"))
+    paths: Iterable[Path] = sorted(pouch.glob(f"*/{RESULT_FILE}"))
     return [
         Result.model_validate_json(path.read_text(encoding="utf-8")) for path in paths
     ]

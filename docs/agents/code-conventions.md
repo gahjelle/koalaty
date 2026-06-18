@@ -29,7 +29,7 @@ rule and how to satisfy it:
   any annotation that genuinely needs deferring, or guard the import under
   `if TYPE_CHECKING:`.
 - **KOA002 — Pydantic models inherit `FrozenModel`, never `BaseModel` directly.**
-  `FrozenModel` (`src/koalaty/models.py`) is a thin project base — a
+  `FrozenModel` (`koalaty.schemas`) is a thin project base — a
   `pydantic.BaseModel` that forbids extra fields and freezes instances — and is
   the one class allowed to subclass `BaseModel`. Inherit it for every model.
 - **KOA003 — `Protocol` methods omit the `...` body.** The docstring is body
@@ -43,22 +43,9 @@ rule and how to satisfy it:
 ## Style
 
 - Prefer `pathlib` over `os.path` for filesystem operations.
-- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers.
+- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0005](../adr/0005-runs-module-for-orchestration.md)).
 - Adapters live in `adapters/` and follow the interface defined in `adapters/base.py`.
-
-## Module structure
-
-```
-src/koalaty/
-  __init__.py        # package docstring only
-  __main__.py        # main() entry point for cyclopts app
-  cli/               # CLI definitions; no business logic
-  config.py          # configuration loading and validation
-  result.py          # result types (Pydantic models)
-  pouch.py           # pouch read/write operations
-  compare.py         # comparison logic
-  adapters/          # adapter protocol + implementations
-```
+- Avoid underscore-prefixed names for "private" symbols — the visual noise outweighs the benefit. Control the public API with `__all__` when a module needs to distinguish exported names from internal helpers.
 
 ## Domain vocabulary
 
