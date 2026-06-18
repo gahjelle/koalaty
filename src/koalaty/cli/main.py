@@ -2,6 +2,13 @@
 
 The CLI layer stays thin: validation and the run-assembly orchestrator live
 here, but all real logic lives in the domain modules they call.
+
+TODO: Extract domain logic (interactive rejection, run assembly) out of this
+module into domain functions so the CLI stays a pure thin wrapper.  Also
+consider introducing a `koalaty.schemas` package to own shared domain types
+(`Turns`, `Task`, `Result`, etc.) so domain modules don't reach into each
+other for types — both `tasks.py` and `result.py` would depend on schemas
+instead of each other.
 """
 
 import re
@@ -75,14 +82,14 @@ def run(
         msg = f"harness {harness!r} does not support headless invocation"
         raise TypeError(msg)
 
-    interactive = loaded.turns is Turns.interactive
-    driver = derive_driver(can_invoke=True, interactive=interactive)
-    if driver == "human":
+    if loaded.turns is Turns.interactive:
         msg = (
             f"task {task!r} is interactive (manual-only); drive it yourself and "
             f"use `start`/`harvest` instead of `run`"
         )
         raise ValueError(msg)
+
+    driver = derive_driver(can_invoke=True, interactive=False)
 
     started = datetime.now(UTC)
     run_id = pouch.new_run_id(pouch_dir, task, harness, model, started)

@@ -42,6 +42,7 @@ ignore = ["COM812", "D203", "D213"]
 # Pydantic resolves annotations at runtime (model schema building), so imports
 # used only in model annotations must stay at runtime, not move to TYPE_CHECKING.
 runtime-evaluated-base-classes = ["pydantic.BaseModel", "koalaty.models.FrozenModel"]
+exempt-modules = ["pathlib"]
 
 [tool.ty.src]
 include = ["src", "tests"]

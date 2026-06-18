@@ -9,14 +9,12 @@ validates a bundle but never checks out a fixture (see ADR-0004).
 import re
 import tomllib
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal
+from pathlib import Path
+from typing import Annotated, Literal
 
 from pydantic import Field, ValidationError, field_validator
 
 from koalaty.models import FrozenModel
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 # A task id is lowercase/digits with internal single dashes; never parsed for
 # meaning, only used to name the bundle directory.
@@ -117,7 +115,7 @@ def _split_prompt(text: str, turns: Turns) -> list[str]:
     segments: list[str] = []
     current: list[str] = []
     for line in text.splitlines():
-        if line.strip() == _TURN_SEPARATOR:
+        if line.rstrip() == _TURN_SEPARATOR:
             segments.append("\n".join(current).strip())
             current = []
         else:
