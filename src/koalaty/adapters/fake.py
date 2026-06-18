@@ -5,14 +5,15 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from koalaty.adapters.base import HarvestedSession
-from koalaty.result import Outcome
+from koalaty.schemas.result import Outcome
 
 if TYPE_CHECKING:
-    from koalaty.tasks import Task
+    from koalaty.schemas.tasks import Task
 
-# Fixed fabricated timestamps so harvested sessions are deterministic.
-_FAKE_STARTED_AT = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
-_FAKE_FINISHED_AT = datetime(2026, 1, 1, 12, 1, 30, tzinfo=UTC)
+__all__ = ["FakeAdapter"]
+
+FAKE_STARTED_AT = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
+FAKE_FINISHED_AT = datetime(2026, 1, 1, 12, 1, 30, tzinfo=UTC)
 
 
 class FakeAdapter:
@@ -45,8 +46,8 @@ class FakeAdapter:
         """Resolve a fabricated session into a deterministic harvested session."""
         raw = self._sessions[session_id]
         return HarvestedSession(
-            started_at=_FAKE_STARTED_AT,
-            finished_at=_FAKE_FINISHED_AT,
+            started_at=FAKE_STARTED_AT,
+            finished_at=FAKE_FINISHED_AT,
             outcome=Outcome.success,
             summary=f"Fake run of {raw['task']} on {raw['model']} succeeded.",
             raw=raw,

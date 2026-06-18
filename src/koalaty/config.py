@@ -4,6 +4,8 @@ from pathlib import Path
 
 import cyclopts
 
+__all__ = ["DEFAULT_POUCH", "DEFAULT_TASKS", "POUCH_ENV", "derive_driver"]
+
 # Location precedence: `--pouch`/`--tasks` → `KOALATY_*` env → the defaults.
 # `command=False` keeps the env vars (`KOALATY_POUCH`, `KOALATY_TASKS`) global,
 # not per-command.

@@ -1,10 +1,12 @@
-"""Result types: the minimal `result.json` schema and its outcome enum."""
+"""Result schemas: the `result.json` shape and its outcome enum."""
 
 from datetime import datetime
 from enum import StrEnum
 
-from koalaty.models import FrozenModel
-from koalaty.tasks import Turns
+from koalaty.schemas import FrozenModel
+from koalaty.schemas.tasks import Turns
+
+__all__ = ["SCHEMA_VERSION", "Outcome", "Result"]
 
 SCHEMA_VERSION = 1
 

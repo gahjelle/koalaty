@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from koalaty.tasks import TaskError, Turns, load_task
+from koalaty.exceptions import TaskLoadError
+from koalaty.schemas.tasks import Turns
+from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -73,7 +75,7 @@ def test_git_gum_rejects_short_sha(tmp_path: Path, make_task: TaskWriter) -> Non
         commit = "abc123"
         """,
     )
-    with pytest.raises(TaskError, match="commit"):
+    with pytest.raises(TaskLoadError, match="commit"):
         load_task(tasks, "quokka")
 
 
@@ -88,14 +90,14 @@ def test_inline_gum_forbids_commit(tmp_path: Path, make_task: TaskWriter) -> Non
         commit = "abc"
         """,
     )
-    with pytest.raises(TaskError):
+    with pytest.raises(TaskLoadError):
         load_task(tasks, "quokka")
 
 
 def test_unknown_turns_is_error(tmp_path: Path, make_task: TaskWriter) -> None:
     """An unknown turns value is a clear error."""
     tasks = make_task(tmp_path, "quokka", turns="freeform")
-    with pytest.raises(TaskError, match="turns"):
+    with pytest.raises(TaskLoadError, match="turns"):
         load_task(tasks, "quokka")
 
 
@@ -105,7 +107,7 @@ def test_absent_turns_is_error(tmp_path: Path) -> None:
     task_dir.mkdir(parents=True)
     (task_dir / "task.toml").write_text("tags = []\n", encoding="utf-8")
     (task_dir / "prompt.md").write_text("Do it.", encoding="utf-8")
-    with pytest.raises(TaskError, match="turns"):
+    with pytest.raises(TaskLoadError, match="turns"):
         load_task(tmp_path, "quokka")
 
 
@@ -133,7 +135,7 @@ def test_scripted_requires_two_turns(tmp_path: Path, make_task: TaskWriter) -> N
         turns="scripted",
         prompt="Only one turn, no separator.",
     )
-    with pytest.raises(TaskError, match="two"):
+    with pytest.raises(TaskLoadError, match="two"):
         load_task(tasks, "quokka")
 
 
@@ -154,5 +156,5 @@ def test_one_shot_keeps_bare_separator_literal(
 def test_load_rejects_bad_task_id(tmp_path: Path, make_task: TaskWriter) -> None:
     """A task id that breaks the id pattern is a clear error."""
     make_task(tmp_path, "quokka")
-    with pytest.raises(TaskError, match="Bad_Id"):
+    with pytest.raises(TaskLoadError, match="Bad_Id"):
         load_task(tmp_path, "Bad_Id")

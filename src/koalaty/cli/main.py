@@ -4,11 +4,7 @@ The CLI layer stays thin: validation and the run-assembly orchestrator live
 here, but all real logic lives in the domain modules they call.
 
 TODO: Extract domain logic (interactive rejection, run assembly) out of this
-module into domain functions so the CLI stays a pure thin wrapper.  Also
-consider introducing a `koalaty.schemas` package to own shared domain types
-(`Turns`, `Task`, `Result`, etc.) so domain modules don't reach into each
-other for types — both `tasks.py` and `result.py` would depend on schemas
-instead of each other.
+module into domain functions so the CLI stays a pure thin wrapper.
 """
 
 import re
@@ -24,10 +20,13 @@ from koalaty.adapters import get_adapter, known_harnesses
 from koalaty.adapters.base import InvocableAdapter
 from koalaty.compare import build_grid, render_grid
 from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV, derive_driver
-from koalaty.result import Result
-from koalaty.tasks import Turns, load_task
+from koalaty.schemas.result import Result
+from koalaty.schemas.tasks import Turns
+from koalaty.tasks import load_task
 
-_MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
+__all__ = ["build_app", "compare", "run"]
+
+MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
 
 PouchOption = Annotated[
     Path,
@@ -40,15 +39,15 @@ TasksOption = Annotated[
 ]
 
 
-def _validate_model(_type: type, value: str) -> None:
+def validate_model(_type: type, value: str) -> None:
     """Reject model names that are not dash-free canonical slugs."""
-    if not _MODEL_PATTERN.fullmatch(value):
-        pattern = _MODEL_PATTERN.pattern
+    if not MODEL_PATTERN.fullmatch(value):
+        pattern = MODEL_PATTERN.pattern
         msg = f"model {value!r} must match {pattern} (a-z, 0-9; no dashes)"
         raise ValueError(msg)
 
 
-def _validate_harness(_type: type, value: str) -> None:
+def validate_harness(_type: type, value: str) -> None:
     """Reject harnesses without a registered adapter."""
     if value not in known_harnesses():
         known = ", ".join(known_harnesses())
@@ -59,8 +58,8 @@ def _validate_harness(_type: type, value: str) -> None:
 def run(
     task: str,
     *,
-    harness: Annotated[str, Parameter(validator=_validate_harness)],
-    model: Annotated[str, Parameter(validator=_validate_model)],
+    harness: Annotated[str, Parameter(validator=validate_harness)],
+    model: Annotated[str, Parameter(validator=validate_model)],
     pouch_dir: PouchOption = DEFAULT_POUCH,
     tasks_dir: TasksOption = DEFAULT_TASKS,
 ) -> str:
@@ -74,7 +73,7 @@ def run(
     loaded = load_task(tasks_dir, task)
 
     adapter = get_adapter(harness)
-    if adapter is None:  # pragma: no cover - guarded by _validate_harness
+    if adapter is None:  # pragma: no cover - guarded by validate_harness
         msg = f"unknown harness {harness!r}"
         raise ValueError(msg)
 

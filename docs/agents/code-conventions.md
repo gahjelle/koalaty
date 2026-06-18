@@ -29,7 +29,7 @@ rule and how to satisfy it:
   any annotation that genuinely needs deferring, or guard the import under
   `if TYPE_CHECKING:`.
 - **KOA002 — Pydantic models inherit `FrozenModel`, never `BaseModel` directly.**
-  `FrozenModel` (`src/koalaty/models.py`) is a thin project base — a
+  `FrozenModel` (`koalaty.schemas`) is a thin project base — a
   `pydantic.BaseModel` that forbids extra fields and freezes instances — and is
   the one class allowed to subclass `BaseModel`. Inherit it for every model.
 - **KOA003 — `Protocol` methods omit the `...` body.** The docstring is body
@@ -45,6 +45,7 @@ rule and how to satisfy it:
 - Prefer `pathlib` over `os.path` for filesystem operations.
 - Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers.
 - Adapters live in `adapters/` and follow the interface defined in `adapters/base.py`.
+- Avoid underscore-prefixed names for "private" symbols — the visual noise outweighs the benefit. Control the public API with `__all__` when a module needs to distinguish exported names from internal helpers.
 
 ## Module structure
 
@@ -54,7 +55,9 @@ src/koalaty/
   __main__.py        # main() entry point for cyclopts app
   cli/               # CLI definitions; no business logic
   config.py          # configuration loading and validation
-  result.py          # result types (Pydantic models)
+  schemas/           # domain types (models, enums, type aliases); no behavior
+  exceptions.py      # domain exceptions (KoalaError base + specifics)
+  tasks.py           # task loading and validation logic
   pouch.py           # pouch read/write operations
   compare.py         # comparison logic
   adapters/          # adapter protocol + implementations

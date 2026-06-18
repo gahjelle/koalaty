@@ -41,8 +41,9 @@ ignore = ["COM812", "D203", "D213"]
 [tool.ruff.lint.flake8-type-checking]
 # Pydantic resolves annotations at runtime (model schema building), so imports
 # used only in model annotations must stay at runtime, not move to TYPE_CHECKING.
-runtime-evaluated-base-classes = ["pydantic.BaseModel", "koalaty.models.FrozenModel"]
-exempt-modules = ["pathlib"]
+runtime-evaluated-base-classes = ["pydantic.BaseModel", "koalaty.schemas.FrozenModel"]
+runtime-evaluated-decorators = ["pydantic.field_validator"]
+exempt-modules = ["pathlib", "datetime", "typing"]
 
 [tool.ty.src]
 include = ["src", "tests"]

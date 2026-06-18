@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid
-from koalaty.result import Outcome, Result
-from koalaty.tasks import Turns
+from koalaty.schemas.result import Outcome, Result
+from koalaty.schemas.tasks import Turns
 
 if TYPE_CHECKING:
     from pathlib import Path
