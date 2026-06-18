@@ -1,14 +1,10 @@
 """CLI definition and the thin run/compare orchestration.
 
-The CLI layer stays thin: validation and the run-assembly orchestrator live
-here, but all real logic lives in the domain modules they call.
-
-TODO: Extract domain logic (interactive rejection, run assembly) out of this
-module into domain functions so the CLI stays a pure thin wrapper.
+The CLI layer stays thin: CLI-level input validation lives here, but all
+domain logic lives in the modules it calls.
 """
 
 import re
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -16,12 +12,10 @@ from cyclopts import App, Parameter
 from rich.console import Console
 
 from koalaty import pouch
-from koalaty.adapters import get_adapter, known_harnesses
-from koalaty.adapters.base import InvocableAdapter
+from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
-from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV, derive_driver
-from koalaty.schemas.result import Result
-from koalaty.schemas.tasks import Turns
+from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV
+from koalaty.runs import run_automated
 from koalaty.tasks import load_task
 
 __all__ = ["build_app", "compare", "run"]
@@ -65,53 +59,12 @@ def run(
 ) -> str:
     """Run a task on a model in a harness and store the result in the pouch.
 
-    Loads the task from disk, invokes the harness, harvests the session,
-    assembles the result, and writes its run directory. An interactive task is
-    rejected (manual-only); nothing is written on any rejection. Returns and
-    prints the new run id.
+    Loads the task from disk, delegates to run_automated for the full
+    pipeline, and returns the new run id.
     """
     loaded = load_task(tasks_dir, task)
-
-    adapter = get_adapter(harness)
-    if adapter is None:  # pragma: no cover - guarded by validate_harness
-        msg = f"unknown harness {harness!r}"
-        raise ValueError(msg)
-
-    if not isinstance(adapter, InvocableAdapter):
-        msg = f"harness {harness!r} does not support headless invocation"
-        raise TypeError(msg)
-
-    if loaded.turns is Turns.interactive:
-        msg = (
-            f"task {task!r} is interactive (manual-only); drive it yourself and "
-            f"use `start`/`harvest` instead of `run`"
-        )
-        raise ValueError(msg)
-
-    driver = derive_driver(can_invoke=True, interactive=False)
-
-    started = datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task, harness, model, started)
-
-    session_id = adapter.invoke(loaded, model)
-    harvested = adapter.harvest(session_id)
-
-    result = Result(
-        run_id=run_id,
-        task=task,
-        harness=harness,
-        model=model,
-        driver=driver,
-        started_at=harvested.started_at,
-        finished_at=harvested.finished_at,
-        outcome=harvested.outcome,
-        summary=harvested.summary,
-        tags=loaded.tags,
-        turns=loaded.turns,
-    )
-    pouch.write_run(pouch_dir, result, harvested.raw)
-
-    return run_id
+    result = run_automated(loaded, harness, model, pouch_dir)
+    return result.run_id
 
 
 def compare(

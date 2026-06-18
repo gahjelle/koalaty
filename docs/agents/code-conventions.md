@@ -43,25 +43,9 @@ rule and how to satisfy it:
 ## Style
 
 - Prefer `pathlib` over `os.path` for filesystem operations.
-- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers.
+- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0005](../adr/0005-runs-module-for-orchestration.md)).
 - Adapters live in `adapters/` and follow the interface defined in `adapters/base.py`.
 - Avoid underscore-prefixed names for "private" symbols — the visual noise outweighs the benefit. Control the public API with `__all__` when a module needs to distinguish exported names from internal helpers.
-
-## Module structure
-
-```
-src/koalaty/
-  __init__.py        # package docstring only
-  __main__.py        # main() entry point for cyclopts app
-  cli/               # CLI definitions; no business logic
-  config.py          # configuration loading and validation
-  schemas/           # domain types (models, enums, type aliases); no behavior
-  exceptions.py      # domain exceptions (KoalaError base + specifics)
-  tasks.py           # task loading and validation logic
-  pouch.py           # pouch read/write operations
-  compare.py         # comparison logic
-  adapters/          # adapter protocol + implementations
-```
 
 ## Domain vocabulary
 
