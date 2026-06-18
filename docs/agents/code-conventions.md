@@ -29,18 +29,9 @@ satisfy it:
   any annotation that genuinely needs deferring, or guard the import under
   `if TYPE_CHECKING:`.
 - **KOA002 — Pydantic models inherit `FrozenModel`, never `BaseModel` directly.**
-  We don't get `FrozenModel` from a library — it's a thin project base class:
-  a `pydantic.BaseModel` whose `model_config` forbids extra fields and freezes
-  instances. Define it once and inherit it everywhere:
-  ```python
-  from pydantic import BaseModel, ConfigDict
-
-  class FrozenModel(BaseModel):
-      """Immutable, strict base for every koalaty model."""
-
-      model_config = ConfigDict(extra="forbid", frozen=True)
-  ```
-  `FrozenModel` itself is the one class allowed to subclass `BaseModel`.
+  `FrozenModel` (`src/koalaty/models.py`) is a thin project base — a
+  `pydantic.BaseModel` that forbids extra fields and freezes instances — and is
+  the one class allowed to subclass `BaseModel`. Inherit it for every model.
 - **KOA003 — `Protocol` methods omit the `...` body.** The docstring is body
   enough; drop the trailing `...`.
 - **KOA004 — docstrings use single backticks, never double.** Write `` `code` ``,
