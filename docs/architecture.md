@@ -48,21 +48,21 @@ koalaty task new <id> [--from-example <name>]   # scaffold a task directory
 
 ### 1. Tasks (authored, version-controlled)
 
-A **task** is the bundle koalaty owns and holds fixed across models. Plain files, hand-editable, scaffolded by `task new`. Config in TOML, prose in Markdown:
+A **task** is the bundle koalaty owns and holds fixed across models. Plain files, hand-editable, scaffolded by `task new`. Config in TOML, prose in Markdown. Tasks live in a configurable directory (`--tasks` / `KOALATY_TASKS`, default `./tasks/`):
 
 ```
 tasks/<id>/
   task.toml      # turns (one-shot|scripted|interactive), tags (drop-bear…), gum pointer
-  prompt.md      # the prompt text to paste/send
+  prompt.md      # the prompt; for scripted tasks, all turns in order separated by a `---` line
   done.md        # prose stopping-guidance (matters most for interactive)
-  turns.md       # scripted follow-up turns, separated by `---` on its own line (scripted only)
   gum/           # starting fixture: inline files, or pointer to git URL + pinned commit
   tests/         # mechanical eval assets
   rubric.md      # rubric criteria
 ```
 
-- **`turns`** sets turn structure and (with harness capability) determines the driver: `one-shot`/`scripted` → automated; `interactive` → manual-only.
-- **drop-bear** is a task tag (adversarial). **Example tasks** ship in-package and are copied into `tasks/` — they are real tasks, not joeys.
+- Only `task.toml` and `prompt.md` are required; the rest are optional.
+- **`turns`** sets turn structure and (with harness capability) determines the driver: `one-shot`/`scripted` → automated; `interactive` → manual-only. Scripted turns are the `---`-separated blocks of `prompt.md` (a single file, not a separate `turns.md` — one place to read the whole script); for `one-shot`/`interactive` the file is one literal prompt.
+- **drop-bear** is a task tag (adversarial). **Example tasks** ship in-package and are *copied* into `tasks/` via `task new --from-example` before they can run — koalaty resolves runs only from the tasks directory, never from the package (see [ADR-0004](./adr/0004-example-tasks-are-copy-only.md)). They are real tasks, not joeys.
 
 ### 2. Adapters (one per harness)
 
