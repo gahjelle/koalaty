@@ -16,9 +16,10 @@ from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
 from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV
 from koalaty.runs import run_automated
+from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run"]
+__all__ = ["build_app", "compare", "run", "task_new"]
 
 MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
 
@@ -84,8 +85,21 @@ def compare(
         console.print(render_grid(build_grid(results, task_id)))
 
 
+def task_new(
+    task_id: str,
+    *,
+    tasks_dir: TasksOption = DEFAULT_TASKS,
+) -> Path:
+    """Scaffold a new task directory that loads and runs unedited.
+
+    Writes the full documented layout under `tasks_dir/<task_id>/` and returns
+    the new directory. Fails without touching disk on a bad id or a collision.
+    """
+    return scaffold_task(tasks_dir, task_id)
+
+
 def build_app() -> App:
-    """Build the cyclopts application with the run and compare commands."""
+    """Build the cyclopts application with the run, compare, and task commands."""
     app = App(
         name="koalaty",
         help="Evaluate and compare models inside agent harnesses.",
@@ -93,4 +107,8 @@ def build_app() -> App:
     )
     app.command(run)
     app.command(compare)
+
+    task_app = App(name="task", help="Author and scaffold task bundles.")
+    task_app.command(task_new, name="new")
+    app.command(task_app)
     return app
