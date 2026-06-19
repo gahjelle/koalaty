@@ -86,16 +86,16 @@ def compare(
 
 
 def task_new(
-    task_id: str,
+    task: str,
     *,
     tasks_dir: TasksOption = DEFAULT_TASKS,
 ) -> Path:
     """Scaffold a new task directory that loads and runs unedited.
 
-    Writes the full documented layout under `tasks_dir/<task_id>/` and returns
+    Writes the full documented layout under `tasks_dir/<task>/` and returns
     the new directory. Fails without touching disk on a bad id or a collision.
     """
-    return scaffold_task(tasks_dir, task_id)
+    return scaffold_task(tasks_dir, task)
 
 
 def build_app() -> App:
