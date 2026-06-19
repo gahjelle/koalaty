@@ -13,4 +13,8 @@ class TaskLoadError(KoalaError):
     """A task bundle is missing, malformed, or fails validation."""
 
 
-__all__ = ["KoalaError", "TaskLoadError"]
+class TaskScaffoldError(KoalaError):
+    """A task scaffold cannot be written (bad id or a colliding directory)."""
+
+
+__all__ = ["KoalaError", "TaskLoadError", "TaskScaffoldError"]
