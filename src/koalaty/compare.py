@@ -1,4 +1,4 @@
-"""Comparison: build a (model x harness) grid per task and render it."""
+"""Comparison: build a (task x model) grid per harness and render it."""
 
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Tally:
-    """The outcome counts for one (model, harness) cell of a grid."""
+    """The outcome counts for one (task, model) cell of a grid."""
 
     success: int = 0
     failure: int = 0
@@ -32,31 +32,31 @@ class Tally:
 
 @dataclass
 class Grid:
-    """A single task's comparison grid: `(model, harness) -> Tally`."""
+    """A single harness's comparison grid: `(task, model) -> Tally`."""
 
-    task: str
+    harness: str
     tallies: dict[tuple[str, str], Tally] = field(default_factory=dict)
+
+    @property
+    def tasks(self) -> list[str]:
+        """The distinct tasks present, in sorted order."""
+        return sorted({task for task, _ in self.tallies})
 
     @property
     def models(self) -> list[str]:
         """The distinct models present, in sorted order."""
-        return sorted({model for model, _ in self.tallies})
-
-    @property
-    def harnesses(self) -> list[str]:
-        """The distinct harnesses present, in sorted order."""
-        return sorted({harness for _, harness in self.tallies})
+        return sorted({model for _, model in self.tallies})
 
 
-def build_grid(results: Iterable[Result], task: str) -> Grid:
-    """Tally the results for `task` into a (model x harness) grid (pure)."""
+def build_grid(results: Iterable[Result], harness: str) -> Grid:
+    """Tally the results for `harness` into a (task x model) grid (pure)."""
     tallies: dict[tuple[str, str], Tally] = defaultdict(Tally)
     for result in results:
-        if result.task != task:
+        if result.harness != harness:
             continue
-        key = (result.model, result.harness)
+        key = (result.task, result.model)
         tallies[key] = tallies[key].add(result.outcome)
-    return Grid(task=task, tallies=dict(tallies))
+    return Grid(harness=harness, tallies=dict(tallies))
 
 
 def render_cell(tally: Tally | None) -> str:
@@ -71,15 +71,13 @@ def render_cell(tally: Tally | None) -> str:
 
 
 def render_grid(grid: Grid) -> Table:
-    """Render `grid` as a rich table: rows = models, columns = harnesses."""
-    table = Table(title=grid.task)
-    table.add_column("model")
-    harnesses = grid.harnesses
-    for harness in harnesses:
-        table.add_column(harness)
-    for model in grid.models:
-        cells = [
-            render_cell(grid.tallies.get((model, harness))) for harness in harnesses
-        ]
-        table.add_row(model, *cells)
+    """Render `grid` as a rich table: rows = tasks, columns = models."""
+    table = Table(title=grid.harness)
+    table.add_column("task")
+    models = grid.models
+    for model in models:
+        table.add_column(model)
+    for task in grid.tasks:
+        cells = [render_cell(grid.tallies.get((task, model))) for model in models]
+        table.add_row(task, *cells)
     return table
