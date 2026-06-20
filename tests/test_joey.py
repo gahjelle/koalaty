@@ -133,7 +133,7 @@ def test_harvest_manual_joey_carry_through(
     make_task(tmp_path / "tasks", "quokka")
     pouch_dir = tmp_path / "pouch"
     task = load_task(tmp_path / "tasks", "quokka")
-    pending, _ = start_manual(task, "fake", "opus48", pouch_dir, joey=True)
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch_dir, joey=True)
     result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch_dir)
 
     assert result.joey is True

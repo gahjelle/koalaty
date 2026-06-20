@@ -28,12 +28,12 @@ def require_adapter(harness: str) -> Adapter:
     return adapter
 
 
-def run_automated(  # noqa: PLR0913 — a run is defined by task, harness, model, and pouch
+def run_automated(
     task: Task,
     harness: str,
     model: str,
-    pouch_dir: Path,
     *,
+    pouch_dir: Path,
     joey: bool = False,
     now: datetime | None = None,
 ) -> Result:
@@ -58,7 +58,7 @@ def run_automated(  # noqa: PLR0913 — a run is defined by task, harness, model
         raise ValueError(msg)
 
     started = now or datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model, started)
+    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model=model, now=started)
 
     session_id = adapter.invoke(task, model)
     harvested = adapter.harvest(session_id)
@@ -82,12 +82,12 @@ def run_automated(  # noqa: PLR0913 — a run is defined by task, harness, model
     return result
 
 
-def start_manual(  # noqa: PLR0913 — a run is defined by task, harness, model, and pouch
+def start_manual(
     task: Task,
     harness: str,
     model: str,
-    pouch_dir: Path,
     *,
+    pouch_dir: Path,
     joey: bool = False,
     now: datetime | None = None,
 ) -> tuple[PendingRun, str]:
@@ -102,7 +102,7 @@ def start_manual(  # noqa: PLR0913 — a run is defined by task, harness, model,
     adapter = require_adapter(harness)
 
     started = now or datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model, started)
+    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model=model, now=started)
 
     instructions = adapter.start(task, model)
 

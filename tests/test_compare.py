@@ -16,7 +16,9 @@ if TYPE_CHECKING:
 _TS = datetime(2026, 1, 1, tzinfo=UTC)
 
 
-def _result(model: str, harness: str, outcome: Outcome, task: str = "quokka") -> Result:
+def _result(
+    model: str, harness: str, outcome: Outcome, *, task: str = "quokka"
+) -> Result:
     """Build a minimal result for grid tests."""
     return Result(
         run_id=f"{task}-{harness}-{model}-20260101-aaaaaa",

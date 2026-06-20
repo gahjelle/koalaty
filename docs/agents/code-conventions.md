@@ -49,6 +49,10 @@ rule and how to satisfy it:
   `[tool.ruff.lint.flake8-type-checking] exempt-modules` in `pyproject.toml`, so
   ruff will never move them into a `TYPE_CHECKING` block. Keep their imports at
   module top level; do not nest them under `if TYPE_CHECKING:`.
+- **KOA009 — at most 3 positional parameters.** Functions with many positional
+  args are hard to call correctly. Beyond 3, make parameters keyword-only
+  (after a bare `*` separator). `self`/`cls` in methods don't count toward
+  the limit. Use a bare `*` separator to make additional parameters keyword-only.
 
 ## Style
 

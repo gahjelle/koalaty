@@ -33,7 +33,7 @@ def run(
     throwaway trial run.
     """
     loaded = load_task(config.tasks, task)
-    result = run_automated(loaded, harness, model, config.pouch, joey=joey)
+    result = run_automated(loaded, harness, model, pouch_dir=config.pouch, joey=joey)
     return result.run_id
 
 
@@ -52,7 +52,7 @@ def start(
     """
     loaded = load_task(config.tasks, task)
     pending, instructions = start_manual(
-        loaded, harness, model, config.pouch, joey=joey
+        loaded, harness, model, pouch_dir=config.pouch, joey=joey
     )
     stderr.print(instructions)
     return pending.run_id
