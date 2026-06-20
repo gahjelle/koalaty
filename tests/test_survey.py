@@ -15,22 +15,10 @@ from koalaty.survey import RichAsker, collect_survey
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from cyclopts import App
-    from tests.conftest import SurveyStub, TaskWriter
-
-
-class _OrderedAsker:
-    """An Asker stub: ratings answered in call order, notes a fixed string."""
-
-    def __init__(self, ratings: list[int], notes: str) -> None:
-        self._ratings = iter(ratings)
-        self._notes = notes
-
-    def rating(self, prompt: str) -> int:  # noqa: ARG002 — prompt unused by the stub
-        return next(self._ratings)
-
-    def text(self, prompt: str) -> str:  # noqa: ARG002 — prompt unused by the stub
-        return self._notes
+    from tests.conftest import StubAsker, SurveyStub, TaskWriter
 
 
 def test_survey_accepts_in_range_ratings() -> None:
@@ -50,18 +38,21 @@ def test_survey_rejects_out_of_range_ratings(rating: int) -> None:
         Survey(friction=rating, hand_holding=3, frustration=2, notes="")
 
 
-def test_collect_survey_assembles_answers_in_order() -> None:
+def test_collect_survey_assembles_answers_in_order(
+    stub_asker: Callable[..., StubAsker],
+) -> None:
     """collect_survey maps the asker's ratings to friction/hand_holding/frustration."""
-    asker = _OrderedAsker([2, 4, 1], notes="a bit fiddly")
-
-    survey = collect_survey(asker)
+    survey = collect_survey(stub_asker([2, 4, 1], "a bit fiddly"))
 
     assert survey == Survey(
         friction=2, hand_holding=4, frustration=1, notes="a bit fiddly"
     )
 
 
-def test_harvest_stores_survey_on_result(make_task: TaskWriter) -> None:
+def test_harvest_stores_survey_on_result(
+    make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
+) -> None:
     """harvest_manual collects the survey via the asker and stores it on the result."""
     make_task(config.tasks, "quokka")
     task = load_task(config.tasks, "quokka")
@@ -71,7 +62,7 @@ def test_harvest_stores_survey_on_result(make_task: TaskWriter) -> None:
         pending.run_id,
         FAKE_SESSION_ID,
         config.pouch,
-        ask=_OrderedAsker([2, 4, 1], notes="a bit fiddly"),
+        ask=stub_asker([2, 4, 1], "a bit fiddly"),
     )
 
     expected = Survey(friction=2, hand_holding=4, frustration=1, notes="a bit fiddly")

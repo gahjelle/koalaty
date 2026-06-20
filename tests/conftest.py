@@ -28,9 +28,11 @@ class StubAsker:
     to those fields positionally.
     """
 
-    def __init__(self, ratings: list[int], notes: str) -> None:
+    def __init__(
+        self, ratings: list[int] | None = None, notes: str = "it was fine"
+    ) -> None:
         """Answer ratings from `ratings` (in order) and notes with `notes`."""
-        self._ratings = iter(ratings)
+        self._ratings = iter(ratings if ratings is not None else [2, 3, 1])
         self._notes = notes
 
     def rating(self, prompt: str) -> int:  # noqa: ARG002 — prompt unused by the stub
@@ -66,9 +68,15 @@ def survey_stub(monkeypatch: pytest.MonkeyPatch) -> SurveyStub:
 
 
 @pytest.fixture
-def asker() -> StubAsker:
-    """Return a ready stub asker for tests that call `harvest_manual` directly."""
-    return StubAsker(ratings=[2, 3, 1], notes="it was fine")
+def stub_asker() -> Callable[..., StubAsker]:
+    """Return a builder for prebaked-answer Askers — the single survey test seam.
+
+    Call with explicit answers (`stub_asker([2, 4, 1], "a bit fiddly")`) when a
+    test asserts what gets stored, or with none for the defaults when the survey
+    is incidental. Handed out as a fixture so tests share one `StubAsker` without
+    importing it across modules (`tests` is not an importable package).
+    """
+    return StubAsker
 
 
 @pytest.fixture(autouse=True)
