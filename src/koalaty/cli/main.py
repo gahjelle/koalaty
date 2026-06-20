@@ -10,10 +10,7 @@ from typing import Annotated
 
 from cyclopts import App, Parameter
 
-from koalaty.cli.compare import compare
-from koalaty.cli.config import show_config
-from koalaty.cli.runs import harvest, run, start
-from koalaty.cli.task import task_examples, task_new
+from koalaty.cli import compare, config, runs, task
 from koalaty.console import print_error
 from koalaty.exceptions import KoalaError
 
@@ -27,15 +24,15 @@ def build_app() -> App:
         help="Evaluate and compare models inside agent harnesses.",
     )
 
-    app.command(run)
-    app.command(start)
-    app.command(harvest)
-    app.command(compare)
-    app.command(show_config)
+    app.command(runs.run)
+    app.command(runs.start)
+    app.command(runs.harvest)
+    app.command(compare.compare)
+    app.command(config.show_config)
 
     task_app = App(name="task", help="Author and scaffold task bundles.")
-    task_app.command(task_new, name="new")
-    task_app.command(task_examples, name="examples")
+    task_app.command(task.task_new, name="new")
+    task_app.command(task.task_examples, name="examples")
     app.command(task_app)
 
     @app.meta.default

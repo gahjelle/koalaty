@@ -11,7 +11,7 @@ from typing import Annotated
 
 from cyclopts import Parameter
 
-from koalaty import config as config_pkg
+from koalaty import config as koalaty_config
 from koalaty.adapters import known_harnesses
 from koalaty.tasks import list_task_ids
 
@@ -24,7 +24,7 @@ __all__ = [
     "validate_task",
 ]
 
-MODEL_NAME_RE = re.compile(config_pkg.config.model.name_pattern)
+MODEL_NAME_RE = re.compile(koalaty_config.config.model.name_pattern)
 
 
 def validate_harness(_type: type, value: str) -> None:
@@ -46,10 +46,14 @@ def validate_model(_type: type, value: str) -> None:
 
 def validate_task(_type: type, value: str) -> None:
     """Reject task names not found in `config.tasks`."""
-    task_ids = list_task_ids(config_pkg.config.tasks)
+    task_ids = list_task_ids(koalaty_config.config.tasks)
     if value not in task_ids:
         ids = ", ".join(task_ids)
-        msg = f"Choose from: {ids}." if ids else "No tasks found."
+        msg = (
+            f"Choose from: {ids}."
+            if ids
+            else "No tasks found, use 'koalaty task' to create tasks"
+        )
         raise ValueError(msg)
 
 

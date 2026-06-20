@@ -11,9 +11,6 @@ from koalaty.config import config
 __all__ = ["show_config"]
 
 
-def show_config(
-    *,
-    section: str | None = None,
-) -> None:
+def show_config(section: str | None = None) -> None:
     """Print the current configuration registry to the console."""
     print_configuration(config, section)
