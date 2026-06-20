@@ -12,19 +12,13 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from koalaty.config import config
 from koalaty.exceptions import TaskLoadError
 from koalaty.schemas.tasks import Task, TaskConfig, Turns
 
 __all__ = ["load_task"]
 
-TASK_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-TURN_SEPARATOR = "---"
-MIN_SCRIPTED_TURNS = 2
-
-CONFIG_FILE = "task.toml"
-PROMPT_FILE = "prompt.md"
-DONE_FILE = "done.md"
-RUBRIC_FILE = "rubric.md"
+TASK_ID_RE = re.compile(config.task.id_pattern)
 
 
 def default_title(task_id: str) -> str:
@@ -41,10 +35,11 @@ def split_prompt(text: str, turns: Turns) -> list[str]:
     if turns is not Turns.scripted:
         return [text.strip()]
 
+    separator = config.task.turn_separator
     segments: list[str] = []
     current: list[str] = []
     for line in text.splitlines():
-        if line.rstrip() == TURN_SEPARATOR:
+        if line.rstrip() == separator:
             segments.append("\n".join(current).strip())
             current = []
         else:
@@ -52,10 +47,10 @@ def split_prompt(text: str, turns: Turns) -> list[str]:
     segments.append("\n".join(current).strip())
 
     prompts = [segment for segment in segments if segment]
-    if len(prompts) < MIN_SCRIPTED_TURNS:
+    if len(prompts) < config.task.min_scripted_turns:
         msg = (
             f"scripted prompt must split into at least two turns on bare "
-            f"{TURN_SEPARATOR!r} lines; found {len(prompts)}"
+            f"{separator!r} lines; found {len(prompts)}"
         )
         raise TaskLoadError(msg)
     return prompts
@@ -91,31 +86,32 @@ def load_task(tasks_dir: Path, task_id: str) -> Task:
         msg = f"no task {task_id!r} found in {tasks_dir}"
         raise TaskLoadError(msg)
 
-    config_path = require(task_dir, CONFIG_FILE)
-    prompt_path = require(task_dir, PROMPT_FILE)
+    task_file = config.task.task_file
+    config_path = require(task_dir, task_file)
+    prompt_path = require(task_dir, config.task.prompt_file)
 
     try:
         raw_config = tomllib.loads(config_path.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
-        msg = f"task {task_id!r} has invalid {CONFIG_FILE}: {error}"
+        msg = f"task {task_id!r} has invalid {task_file}: {error}"
         raise TaskLoadError(msg) from error
 
     try:
-        config = TaskConfig.model_validate(raw_config)
+        task_config = TaskConfig.model_validate(raw_config)
     except ValidationError as error:
-        msg = f"task {task_id!r} has invalid {CONFIG_FILE}: {error}"
+        msg = f"task {task_id!r} has invalid {task_file}: {error}"
         raise TaskLoadError(msg) from error
 
-    prompts = split_prompt(prompt_path.read_text(encoding="utf-8"), config.turns)
+    prompts = split_prompt(prompt_path.read_text(encoding="utf-8"), task_config.turns)
 
     return Task(
         id=task_id,
-        title=config.title or default_title(task_id),
-        description=config.description,
-        turns=config.turns,
-        tags=config.tags,
-        gum=config.gum,
+        title=task_config.title or default_title(task_id),
+        description=task_config.description,
+        turns=task_config.turns,
+        tags=task_config.tags,
+        gum=task_config.gum,
         prompts=prompts,
-        done=read_optional(task_dir, DONE_FILE),
-        rubric=read_optional(task_dir, RUBRIC_FILE),
+        done=read_optional(task_dir, config.task.done_file),
+        rubric=read_optional(task_dir, config.task.rubric_file),
     )

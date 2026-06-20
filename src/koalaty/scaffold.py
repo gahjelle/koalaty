@@ -5,18 +5,15 @@ documented task layout with valid placeholder content, so an author starts
 from a skeleton that loads and runs through `run` unedited (see ADR-0004).
 """
 
+import re
 from pathlib import Path
 
+from koalaty.config import config
 from koalaty.exceptions import TaskScaffoldError
-from koalaty.tasks import (
-    CONFIG_FILE,
-    DONE_FILE,
-    PROMPT_FILE,
-    RUBRIC_FILE,
-    TASK_ID_RE,
-)
 
 __all__ = ["scaffold_task", "validate_destination"]
+
+TASK_ID_RE = re.compile(config.task.id_pattern)
 
 TASK_TOML = """\
 # turns: turn structure — "one-shot" (one prompt), "scripted" (turns separated
@@ -73,8 +70,8 @@ def scaffold_task(tasks_dir: Path, task_id: str) -> Path:
 
     (task_dir / "gum").mkdir(parents=True)
     (task_dir / "tests").mkdir()
-    (task_dir / CONFIG_FILE).write_text(TASK_TOML, encoding="utf-8")
-    (task_dir / PROMPT_FILE).write_text(PROMPT_MD, encoding="utf-8")
-    (task_dir / DONE_FILE).write_text(DONE_MD, encoding="utf-8")
-    (task_dir / RUBRIC_FILE).write_text(RUBRIC_MD, encoding="utf-8")
+    (task_dir / config.task.task_file).write_text(TASK_TOML, encoding="utf-8")
+    (task_dir / config.task.prompt_file).write_text(PROMPT_MD, encoding="utf-8")
+    (task_dir / config.task.done_file).write_text(DONE_MD, encoding="utf-8")
+    (task_dir / config.task.rubric_file).write_text(RUBRIC_MD, encoding="utf-8")
     return task_dir
