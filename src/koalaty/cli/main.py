@@ -33,25 +33,18 @@ __all__ = [
     "task_new",
 ]
 
-MODEL_PATTERN = re.compile(config.model.name_pattern)
+MODEL_NAME_RE = re.compile(config.model.name_pattern)
 
-PouchOption = Annotated[
+type HarnessParam = Annotated[str, Parameter(validator=validate_harness)]
+type ModelParam = Annotated[str, Parameter(validator=validate_model)]
+type PouchOption = Annotated[
     Path,
     Parameter(name="--pouch", help="Pouch directory (results store)."),
 ]
-
-TasksOption = Annotated[
+type TasksOption = Annotated[
     Path,
     Parameter(name="--tasks", help="Tasks directory (task bundles)."),
 ]
-
-
-def validate_model(_type: type, value: str) -> None:
-    """Reject model names that are not dash-free canonical slugs."""
-    if not MODEL_PATTERN.fullmatch(value):
-        pattern = MODEL_PATTERN.pattern
-        msg = f"model {value!r} must match {pattern} (a-z, 0-9; no dashes)"
-        raise ValueError(msg)
 
 
 def validate_harness(_type: type, value: str) -> None:
@@ -62,11 +55,20 @@ def validate_harness(_type: type, value: str) -> None:
         raise ValueError(msg)
 
 
+def validate_model(_type: type, value: str) -> None:
+    """Reject model names that are not dash-free canonical slugs."""
+    if not MODEL_NAME_RE.fullmatch(value):
+        msg = (
+            f"model {value!r} must match {MODEL_NAME_RE.pattern} (a-z, 0-9; no dashes)"
+        )
+        raise ValueError(msg)
+
+
 def run(
     task: str,
     *,
-    harness: Annotated[str, Parameter(validator=validate_harness)],
-    model: Annotated[str, Parameter(validator=validate_model)],
+    harness: HarnessParam,
+    model: ModelParam,
     pouch_dir: PouchOption = config.pouch,
     tasks_dir: TasksOption = config.tasks,
 ) -> str:
@@ -83,8 +85,8 @@ def run(
 def start(
     task: str,
     *,
-    harness: Annotated[str, Parameter(validator=validate_harness)],
-    model: Annotated[str, Parameter(validator=validate_model)],
+    harness: HarnessParam,
+    model: ModelParam,
     pouch_dir: PouchOption = config.pouch,
     tasks_dir: TasksOption = config.tasks,
 ) -> str:
