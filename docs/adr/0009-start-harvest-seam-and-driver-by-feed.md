@@ -10,7 +10,7 @@ The manual feed (`start` → pending run → `harvest`) is uniform across harnes
 - `harvest(session_id) -> HarvestedSession` — base, required (unchanged).
 - `invoke(task, model) -> session_id` — optional `InvocableAdapter` (unchanged).
 
-The session id is **always supplied externally** at `harvest` time — the harness mints it while the human drives, so it cannot be known at `start`. This makes the two-step shape (`start` prints instructions; `harvest` takes an external id) identical across harnesses; only the instruction *text* varies. The fake adapter is a faithful stand-in: its `start` instructions hand you a concrete id ("…run `koalaty harvest <run-id> --session abc123`") because it is self-contained, and its `harvest` resolves any id deterministically. `task`/`model`/`turns` come from `pending.json`, so the harvested session need not carry them.
+The session id is **always supplied externally** at `harvest` time — the harness mints it while the human drives, so it cannot be known at `start`. This makes the two-step shape (`start` prints instructions; `harvest` takes an external id) identical across harnesses; only the instruction *text* varies. The fake adapter is a faithful stand-in: its `start` instructions hand you a concrete id ("…run `koalaty harvest <run-id> --session abc123`") because it is self-contained, and its `harvest` resolves known ids (those from `invoke` or the concrete id from `start`) deterministically; unknown ids are rejected. `task`/`model`/`turns` come from `pending.json`, so the harvested session need not carry them.
 
 ## Driver by feed
 
@@ -18,6 +18,6 @@ The session id is **always supplied externally** at `harvest` time — the harne
 
 ## Consequences
 
-- `runs.py` gains `start_run` (mint id → `adapter.start` → write `pending.json`, `driver="human"`) and `harvest_run` (load pending → `adapter.harvest` → assemble `Result` → write/remove), mirroring `run_automated`'s literal `driver="koalaty"` (ADR-0005).
-- `derive_driver` becomes a routing predicate (may this task be automated?), not the source of the recorded `driver`.
+- `runs.py` gains `start_manual` (mint id → `adapter.start` → write `pending.json`, `driver="human"`) and `harvest_manual` (load pending → `adapter.harvest` → assemble `Result` → write/remove), mirroring `run_automated`'s literal `driver="koalaty"` (ADR-0005).
+- `derive_driver` has been removed; routing (may this task be automated?) is now expressed inline — `run_automated` rejects interactive tasks, `start_manual` accepts all — rather than as a named predicate.
 - Real `claudecode.start()`/`harvest()` arrive with the Claude Code adapter (a later slice); the fake proves the seam now.

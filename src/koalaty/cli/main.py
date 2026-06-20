@@ -18,31 +18,33 @@ from koalaty.config import config
 from koalaty.console import stderr, stdout
 from koalaty.examples import copy_example, list_examples
 from koalaty.exceptions import TaskScaffoldError
-from koalaty.runs import run_automated
+from koalaty.runs import harvest_manual, run_automated, start_manual
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run", "show_config", "task_examples", "task_new"]
+__all__ = [
+    "build_app",
+    "compare",
+    "harvest",
+    "run",
+    "show_config",
+    "start",
+    "task_examples",
+    "task_new",
+]
 
-MODEL_PATTERN = re.compile(config.model.name_pattern)
+MODEL_NAME_RE = re.compile(config.model.name_pattern)
 
-PouchOption = Annotated[
+type HarnessParam = Annotated[str, Parameter(validator=validate_harness)]
+type ModelParam = Annotated[str, Parameter(validator=validate_model)]
+type PouchOption = Annotated[
     Path,
     Parameter(name="--pouch", help="Pouch directory (results store)."),
 ]
-
-TasksOption = Annotated[
+type TasksOption = Annotated[
     Path,
     Parameter(name="--tasks", help="Tasks directory (task bundles)."),
 ]
-
-
-def validate_model(_type: type, value: str) -> None:
-    """Reject model names that are not dash-free canonical slugs."""
-    if not MODEL_PATTERN.fullmatch(value):
-        pattern = MODEL_PATTERN.pattern
-        msg = f"model {value!r} must match {pattern} (a-z, 0-9; no dashes)"
-        raise ValueError(msg)
 
 
 def validate_harness(_type: type, value: str) -> None:
@@ -53,11 +55,20 @@ def validate_harness(_type: type, value: str) -> None:
         raise ValueError(msg)
 
 
+def validate_model(_type: type, value: str) -> None:
+    """Reject model names that are not dash-free canonical slugs."""
+    if not MODEL_NAME_RE.fullmatch(value):
+        msg = (
+            f"model {value!r} must match {MODEL_NAME_RE.pattern} (a-z, 0-9; no dashes)"
+        )
+        raise ValueError(msg)
+
+
 def run(
     task: str,
     *,
-    harness: Annotated[str, Parameter(validator=validate_harness)],
-    model: Annotated[str, Parameter(validator=validate_model)],
+    harness: HarnessParam,
+    model: ModelParam,
     pouch_dir: PouchOption = config.pouch,
     tasks_dir: TasksOption = config.tasks,
 ) -> str:
@@ -68,6 +79,42 @@ def run(
     """
     loaded = load_task(tasks_dir, task)
     result = run_automated(loaded, harness, model, pouch_dir)
+    return result.run_id
+
+
+def start(
+    task: str,
+    *,
+    harness: HarnessParam,
+    model: ModelParam,
+    pouch_dir: PouchOption = config.pouch,
+    tasks_dir: TasksOption = config.tasks,
+) -> str:
+    """Start a manual run: write a pending run and print setup instructions.
+
+    Loads the task, delegates to start_manual (which never invokes the harness),
+    prints the harness-specific setup instructions to stderr, and returns the
+    new run id on stdout.
+    """
+    loaded = load_task(tasks_dir, task)
+    pending, instructions = start_manual(loaded, harness, model, pouch_dir)
+    stderr.print(instructions)
+    return pending.run_id
+
+
+def harvest(
+    run_id: str,
+    *,
+    session: str,
+    pouch_dir: PouchOption = config.pouch,
+) -> str:
+    """Harvest a pending manual run's externally-supplied session into a result.
+
+    Delegates to harvest_manual, which writes result.json and removes pending.json,
+    then returns the completed run id. Errors if the run id is unknown or has
+    already been harvested.
+    """
+    result = harvest_manual(run_id, session, pouch_dir)
     return result.run_id
 
 
@@ -131,12 +178,14 @@ def show_config(
 
 
 def build_app() -> App:
-    """Build the cyclopts application with the run, compare, and task commands."""
+    """Build the cyclopts application with all registered commands."""
     app = App(
         name="koalaty",
         help="Evaluate and compare models inside agent harnesses.",
     )
     app.command(run)
+    app.command(start)
+    app.command(harvest)
     app.command(compare)
     app.command(show_config)
 

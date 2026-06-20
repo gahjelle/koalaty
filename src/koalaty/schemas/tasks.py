@@ -44,7 +44,7 @@ class GitGum(FrozenModel):
         return value
 
 
-Gum = Annotated[InlineGum | GitGum, Field(discriminator="type")]
+type Gum = Annotated[InlineGum | GitGum, Field(discriminator="type")]
 
 
 class TaskConfig(FrozenModel):

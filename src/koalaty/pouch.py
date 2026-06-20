@@ -12,15 +12,26 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from koalaty.config import config
+from koalaty.exceptions import HarvestError
+from koalaty.schemas.pending import PendingRun
 from koalaty.schemas.result import Result
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-__all__ = ["mint_run_id", "new_run_id", "read_results", "write_run"]
+__all__ = [
+    "mint_run_id",
+    "new_run_id",
+    "read_pending",
+    "read_results",
+    "remove_pending",
+    "write_pending",
+    "write_run",
+]
 
 RESULT_FILE = config.result.result_file
 RAW_SESSION_FILE = config.result.raw_session_file
+PENDING_FILE = config.result.pending_file
 
 
 def default_shortid() -> str:
@@ -74,6 +85,38 @@ def write_run(pouch: Path, result: Result, raw: dict[str, Any]) -> Path:
         json.dumps(raw, indent=2) + "\n", encoding="utf-8"
     )
     return run_dir
+
+
+def write_pending(pouch: Path, pending: PendingRun) -> Path:
+    """Write `pending.json` for `pending`'s run dir, creating it. Returns the dir.
+
+    A pending run carries no `result.json`, so `read_results` (and thus
+    `compare`) ignores it until `harvest` completes it (ADR-0008).
+    """
+    run_dir = pouch / pending.run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / PENDING_FILE).write_text(
+        pending.model_dump_json(indent=2) + "\n", encoding="utf-8"
+    )
+    return run_dir
+
+
+def read_pending(pouch: Path, run_id: str) -> PendingRun:
+    """Load the `pending.json` for `run_id`, or raise if there is none.
+
+    An absent `pending.json` means an unknown or already-harvested run; the
+    caller must write nothing in that case (ADR-0008).
+    """
+    path = pouch / run_id / PENDING_FILE
+    if not path.is_file():
+        msg = f"no pending run {run_id!r} to harvest"
+        raise HarvestError(msg)
+    return PendingRun.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def remove_pending(pouch: Path, run_id: str) -> None:
+    """Remove the `pending.json` for `run_id`; harvest has completed the run."""
+    (pouch / run_id / PENDING_FILE).unlink()
 
 
 def read_results(pouch: Path) -> list[Result]:

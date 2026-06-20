@@ -27,6 +27,7 @@ name_pattern = "^[a-z0-9]+$"
 [result]
 result_file = "result.json"
 raw_session_file = "raw/session.json"
+pending_file = "pending.json"
 
 # Values shaping a minted run id; its structure stays an f-string in code.
 [run_id]

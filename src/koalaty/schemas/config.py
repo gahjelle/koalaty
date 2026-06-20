@@ -35,6 +35,7 @@ class ResultLayout(FrozenModel):
 
     result_file: str
     raw_session_file: str
+    pending_file: str
 
 
 class RunId(FrozenModel):

@@ -51,7 +51,7 @@ is removed so there is exactly one env owner.
 - `config.py` becomes a `config/` package; the `Config` shape (and its
   sub-models) lives in `schemas/config.py` per ADR-0004 (shapes shared across
   modules live in `schemas/`), while loading + the singleton live in
-  `config/__init__.py`. `derive_driver` moves to its behavioral home in `runs.py`.
+  `config/__init__.py`.
 - Run-id pieces (date format, shortid length, `result.json`, `raw/session.json`)
   move to config as *values*; the structural `<task>-<harness>-<model>-<date>-<shortid>`
   ordering stays an f-string in code (ADR-0003 — the id is a label, not parsed).
