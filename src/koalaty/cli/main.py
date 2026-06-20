@@ -10,12 +10,12 @@ from typing import Annotated
 
 from configaroo import print_configuration
 from cyclopts import App, Parameter
-from rich.console import Console
 
 from koalaty import pouch
 from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
 from koalaty.config import config
+from koalaty.console import stderr, stdout
 from koalaty.examples import copy_example, list_examples
 from koalaty.exceptions import TaskScaffoldError
 from koalaty.runs import run_automated
@@ -77,17 +77,16 @@ def compare(
     pouch_dir: PouchOption = config.pouch,
 ) -> None:
     """Print a (task x model) grid per harness of the results in the pouch."""
-    console = Console()
     results = pouch.read_results(pouch_dir)
     if not results:
-        console.print(f"no runs found in {pouch_dir}")
+        stderr.print(f"no runs found in {pouch_dir}")
         return
 
     if task is not None:
         results = [result for result in results if result.task == task]
     harnesses = sorted({result.harness for result in results})
     for harness in harnesses:
-        console.print(render_grid(build_grid(results, harness)))
+        stdout.print(render_grid(build_grid(results, harness)))
 
 
 def task_new(
@@ -116,12 +115,11 @@ def task_new(
 
 def task_examples() -> None:
     """List the bundled example tasks with each one's name and title."""
-    console = Console()
     for example in list_examples():
         description = (
             f" \N{EM DASH} {example.description}" if example.description else ""
         )
-        console.print(f"{example.id}  {example.title}{description}")
+        stdout.print(f"{example.id}  {example.title}{description}")
 
 
 def show_config(

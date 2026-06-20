@@ -154,6 +154,6 @@ def test_compare_friendly_when_empty(
 ) -> None:
     """Compare reports a friendly message when the pouch has no runs."""
     app(["compare", "--pouch", str(tmp_path)])
-    out = capsys.readouterr().out
-    assert "no runs found" in out
-    assert str(tmp_path) in out
+    err = capsys.readouterr().err
+    assert "no runs found" in err
+    assert str(tmp_path) in err
