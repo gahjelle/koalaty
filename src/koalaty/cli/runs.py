@@ -10,10 +10,7 @@ import would defeat the test isolation that monkeypatches `config` (ADR-0010).
 The dynamic task `Literal` on `run`/`start` is applied in `build_app`.
 """
 
-from koalaty.cli import (  # noqa: TC001 — cyclopts resolves these annotation aliases at runtime via get_type_hints
-    HarnessParam,
-    ModelParam,
-)
+from koalaty.cli import HarnessParam, ModelParam
 from koalaty.config import config
 from koalaty.console import stderr
 from koalaty.runs import harvest_manual, run_automated, start_manual
