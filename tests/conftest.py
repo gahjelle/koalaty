@@ -35,8 +35,8 @@ def app() -> App:
 
     The autouse `isolate_config` fixture runs first (autouse fixtures precede
     explicitly-requested ones in the same scope), so the app is built *after*
-    `config` is pointed at the test's tmp_path — the dynamic task `Literal` is
-    built from `config.tasks` at `build_app` time. `exit_on_error=False` lets
+    `config` is pointed at the test's tmp_path — the task validator reads
+    `config.tasks` at parse time. `exit_on_error=False` lets
     validation errors raise instead of exiting, and `result_action="return_value"`
     returns the command's value (e.g. the run id).
     """

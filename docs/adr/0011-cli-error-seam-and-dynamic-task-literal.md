@@ -1,4 +1,4 @@
-# CLI error seam: a meta-launcher box plus an early task `Literal`
+# CLI error seam: a meta-launcher box plus an early task validator
 
 Two parse-stage-style boxes, one consistent look. cyclopts already renders a red
 "Error" panel for **parse-stage** errors (an unknown command, a bad option). Two
@@ -45,40 +45,43 @@ def launcher(*tokens):
   render them was rejected: it would couple domain modules to cyclopts' exception
   hierarchy and blur the parse-vs-execute boundary the box look is meant to keep.
 
-## An early task `Literal` rejects unknown tasks up front
+## A `TaskParam` validator rejects unknown tasks at parse time
 
-`run` / `start` annotate their `task` parameter with a `Literal` of the task ids
-found in `config.tasks` at `build_app()` time (an empty/missing tasks dir falls
-back to plain `str`). An unknown task is then a **parse-stage** rejection with
-cyclopts' own box — before `--harness`/`--model` are even required. This relies
-on settings being import-time knowable, which is why the flags had to go
-([ADR-0010](0010-settings-env-only-mutable-config.md)).
+`run` / `start` annotate their `task` parameter with `TaskParam` — a `str`
+annotated with a cyclopts `Parameter(validator=validate_task)`. The validator
+checks `config.tasks` at parse time and raises `ValueError` for an unknown task
+id, so cyclopts renders its own error box — before `--harness`/`--model` are
+even required. This relies on settings being import-time knowable, which is why
+the flags had to go ([ADR-0010](0010-settings-env-only-mutable-config.md)).
 
-- **`Literal`, not `Enum`.** cyclopts matches `Enum` by member *name* (valid
+- **Validator, not `Literal`.** An earlier version used a dynamic `Literal` of
+  task ids injected by cloning each handler function and swapping the `task`
+  annotation at `build_app()` time. That gave choices in `--help` but required
+  `types.FunctionType` cloning and a `# ty: ignore` for the runtime `Literal`
+  tuple. A validator is strictly simpler — same early rejection, same error
+  wording (cyclopts prepends `"Invalid value" for TASK` to the `ValueError`),
+  and no metaprogramming. The trade-off is that available tasks don't appear as
+  `[choices: ...]` in `--help`; only in the error message on a bad value.
+- **Validator, not `Enum`.** cyclopts matches `Enum` by member *name* (valid
   Python identifiers only); task ids allow dashes and digit-leading values
-  (`3d-render`), which `Enum` names cannot represent. `Literal[tuple(ids)]` takes
-  arbitrary strings, and the cyclopts docs recommend `Literal` for choices.
-- **Built by cloning the handler.** cyclopts derives choices from the parameter
-  annotation, so `build_app()` clones `run`/`start` and swaps the `task`
-  annotation for the `Literal` (the real type object, so cyclopts resolves it
-  without the build-time closure in scope). The module-level functions are left
-  untouched. `list_task_ids(tasks_dir)` (in `tasks.py`, parallel to
-  `known_harnesses()`) supplies the ids.
+  (`3d-render`), which `Enum` names cannot represent. A validator accepts
+  arbitrary strings.
+- `list_task_ids(tasks_dir)` (in `tasks.py`, parallel to `known_harnesses()`)
+  supplies the ids.
 - `compare`'s `task` (a filter over pouch results) and `task_new`'s `task` (a
   *new* id that must not yet exist) stay plain `str`.
 
 ### Observed ordering
 
 `koalaty run asdf` (no `--harness`) reports the bad task first —
-`Invalid value "asdf" for TASK. Choose from: "quokka".` — rather than the
+`Invalid value "asdf" for TASK. Choose from: quokka.` — rather than the
 missing required option. So an unknown task surfaces immediately, which was the
-goal. With an empty tasks dir, `task` falls back to `str`, `asdf` passes parsing,
-and the unknown task is caught at load time and boxed by the meta launcher
-instead.
+goal. With an empty tasks dir, the validator still fires and rejects the value
+(cyclopts' own box), rather than deferring to a load-time `TaskLoadError`.
 
 ## Consequences
 
 - `console.print_error` is the single domain-error renderer; `__main__` runs the
   app via `.meta()`.
-- The dynamic `Literal` is rebuilt on every `build_app()`, so it always reflects
-  the current `config.tasks` (which tests monkeypatch before building the app).
+- `TaskParam` in `cli/__init__.py` is the single early-task-validation point;
+  `run`/`start` use it directly, no build-time annotation swapping needed.

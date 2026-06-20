@@ -1,9 +1,8 @@
-"""Tests for early task-name validation via the dynamic `Literal`.
+"""Tests for early task-name validation via the `TaskParam` validator.
 
-`run`/`start` get a `Literal` of the task ids found in `config.tasks` at
-`build_app` time, so an unknown task is rejected up front. These build the app
-*after* writing tasks (the `app` fixture builds too early for that), so the
-`Literal` reflects the on-disk ids. The autouse `isolate_config` fixture points
+`run`/`start` annotate their `task` parameter with `TaskParam`, whose validator
+checks `config.tasks` at parse time, so an unknown task is rejected up front
+with a cyclopts error box. The autouse `isolate_config` fixture points
 `config.tasks`/`config.pouch` at this test's tmp_path.
 """
 
@@ -15,24 +14,15 @@ import pytest
 from koalaty.cli.main import build_app
 
 if TYPE_CHECKING:
-    from cyclopts import App
     from tests.conftest import TaskWriter
 
 
-def _return_app() -> App:
-    """Build an app that returns command values and raises instead of exiting."""
-    app = build_app()
-    app.exit_on_error = False
-    app.result_action = "return_value"
-    return app
-
-
-def test_literal_choices_track_config_tasks(
+def test_unknown_task_rejected_with_choices(
     tmp_path: Path,
     make_task: TaskWriter,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """An unknown task is rejected up front, listing the known ids as choices."""
+    """An unknown task is rejected up front, listing the known ids."""
     make_task(tmp_path / "tasks", "quokka")
     app = build_app()
 
@@ -48,19 +38,21 @@ def test_run_accepts_dashed_task_id(
     tmp_path: Path,
     make_task: TaskWriter,
 ) -> None:
-    """A dashed id is a valid Literal choice (the reason it is Literal, not Enum)."""
+    """A dashed id passes the validator (the reason it is a validator, not Enum)."""
     make_task(tmp_path / "tasks", "3d-render")
-    app = _return_app()
+    app = build_app()
+    app.exit_on_error = False
+    app.result_action = "return_value"
 
     run_id = app(["run", "3d-render", "--harness", "fake", "--model", "opus48"])
     assert run_id.startswith("3d-render-fake-opus48-")
 
 
-def test_empty_tasks_dir_falls_back_to_str(
+def test_empty_tasks_dir_rejects_any_task(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """An empty tasks dir falls back to `str`; the load-time error still boxes."""
+    """An empty tasks dir rejects any task name; the validator fires with no ids."""
     (tmp_path / "tasks").mkdir()
     app = build_app()
 

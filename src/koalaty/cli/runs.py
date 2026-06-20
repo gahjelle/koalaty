@@ -7,10 +7,10 @@ lives in the shared types, but all domain logic lives in `koalaty.runs`.
 The settings paths (`config.tasks`, `config.pouch`) are read in the command
 bodies, at call time, rather than bound as def-time defaults: binding once at
 import would defeat the test isolation that monkeypatches `config` (ADR-0010).
-The dynamic task `Literal` on `run`/`start` is applied in `build_app`.
+The `TaskParam` validator on `run`/`start` rejects unknown tasks at parse time.
 """
 
-from koalaty.cli import HarnessParam, ModelParam
+from koalaty.cli import HarnessParam, ModelParam, TaskParam
 from koalaty.config import config
 from koalaty.console import stderr
 from koalaty.runs import harvest_manual, run_automated, start_manual
@@ -20,7 +20,7 @@ __all__ = ["harvest", "run", "start"]
 
 
 def run(
-    task: str,
+    task: TaskParam,
     *,
     harness: HarnessParam,
     model: ModelParam,
@@ -36,7 +36,7 @@ def run(
 
 
 def start(
-    task: str,
+    task: TaskParam,
     *,
     harness: HarnessParam,
     model: ModelParam,
