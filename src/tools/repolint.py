@@ -125,7 +125,10 @@ def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
                 node.lineno,
                 node.col_offset + 1,
                 "KOA002",
-                f"`{node.name}` must subclass a strict base, not `BaseModel`",
+                (
+                    f"`{node.name}` must subclass `StrictModel` or `FrozenModel`,"
+                    " not `BaseModel`"
+                ),
             )
 
 

@@ -49,8 +49,7 @@ runtime-evaluated-base-classes = [
 ]
 runtime-evaluated-decorators = ["pydantic.field_validator"]
 # cyclopts resolves command annotations at runtime (get_type_hints), so the
-# `koalaty.cli` parameter-type aliases must stay at runtime too. KOA008 keeps
-# every exempt module out of TYPE_CHECKING blocks, so the two stay in sync.
+# `koalaty.cli` parameter-type aliases must stay at runtime too.
 exempt-modules = ["pathlib", "datetime", "typing", "koalaty.cli"]
 
 [tool.ty.src]
