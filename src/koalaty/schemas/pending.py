@@ -32,4 +32,5 @@ class PendingRun(FrozenModel):
     driver: str
     turns: Turns
     tags: list[str]
+    joey: bool = False
     created_at: datetime
