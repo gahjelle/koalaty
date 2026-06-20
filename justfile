@@ -24,8 +24,8 @@ conventions *args:
     uv run python -m tools.repolint {{args}}
 
 # Run the test suite quietly.
-test:
-    uv run pytest -q
+test *args:
+    uv run pytest -q {{args}}
 
 # Auto-fix lint issues then reformat.
 fix:
