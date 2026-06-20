@@ -2,10 +2,9 @@
 
 These drive the app through `build_app().meta(...)` — the real entry point
 `__main__.main()` uses — so they exercise the domain-error catch that turns a
-`KoalaError` into a Rich box instead of a traceback.
+`KoalaError` into a Rich box instead of a traceback. The pouch/tasks come from
+`config`, which the autouse `isolate_config` fixture points at a tmp_path.
 """
-
-from pathlib import Path
 
 import pytest
 
@@ -13,22 +12,12 @@ from koalaty.cli.main import build_app
 
 
 def test_domain_error_prints_box_and_exits(
-    tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A KoalaError raised in a command body becomes a Rich box, exit code 1."""
     app = build_app()
     with pytest.raises(SystemExit) as excinfo:
-        app.meta(
-            [
-                "harvest",
-                "wombat-fake-opus48-x",
-                "--session",
-                "s",
-                "--pouch",
-                str(tmp_path),
-            ]
-        )
+        app.meta(["harvest", "wombat-fake-opus48-x", "--session", "s"])
 
     assert excinfo.value.code == 1
     err = capsys.readouterr().err
@@ -37,7 +26,6 @@ def test_domain_error_prints_box_and_exits(
 
 
 def test_genuine_bug_still_raises_traceback(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A non-KoalaError escapes the launcher uncaught, keeping bugs debuggable."""
@@ -49,7 +37,7 @@ def test_genuine_bug_still_raises_traceback(
     monkeypatch.setattr("koalaty.cli.runs.harvest_manual", boom)
     app = build_app()
     with pytest.raises(RuntimeError, match="a genuine bug"):
-        app.meta(["harvest", "any-run-id", "--session", "s", "--pouch", str(tmp_path)])
+        app.meta(["harvest", "any-run-id", "--session", "s"])
 
 
 def _error_frame(err: str) -> list[str]:
@@ -58,7 +46,6 @@ def _error_frame(err: str) -> list[str]:
 
 
 def test_domain_box_matches_cyclopts_parse_box(
-    tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The domain-error box and cyclopts' parse-error box share their framing."""
@@ -71,16 +58,7 @@ def test_domain_box_matches_cyclopts_parse_box(
 
     # A domain error caught at the launcher seam, rendered by `print_error`.
     with pytest.raises(SystemExit):
-        app.meta(
-            [
-                "harvest",
-                "wombat-fake-opus48-x",
-                "--session",
-                "s",
-                "--pouch",
-                str(tmp_path),
-            ]
-        )
+        app.meta(["harvest", "wombat-fake-opus48-x", "--session", "s"])
     domain_frame = _error_frame(capsys.readouterr().err)
 
     assert parse_frame == domain_frame

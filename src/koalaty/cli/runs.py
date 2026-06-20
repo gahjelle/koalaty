@@ -3,13 +3,16 @@
 These sit alongside `koalaty.runs` (the orchestration module they delegate to);
 this is the CLI face of each feed. The CLI layer stays thin: input validation
 lives in the shared types, but all domain logic lives in `koalaty.runs`.
+
+The settings paths (`config.tasks`, `config.pouch`) are read in the command
+bodies, at call time, rather than bound as def-time defaults: binding once at
+import would defeat the test isolation that monkeypatches `config` (ADR-0010).
+The dynamic task `Literal` on `run`/`start` is applied in `build_app`.
 """
 
 from koalaty.cli import (  # noqa: TC001 — cyclopts resolves these annotation aliases at runtime via get_type_hints
     HarnessParam,
     ModelParam,
-    PouchOption,
-    TasksOption,
 )
 from koalaty.config import config
 from koalaty.console import stderr
@@ -24,16 +27,14 @@ def run(
     *,
     harness: HarnessParam,
     model: ModelParam,
-    pouch_dir: PouchOption = config.pouch,
-    tasks_dir: TasksOption = config.tasks,
 ) -> str:
     """Run a task on a model in a harness and store the result in the pouch.
 
     Loads the task from disk, delegates to run_automated for the full
     pipeline, and returns the new run id.
     """
-    loaded = load_task(tasks_dir, task)
-    result = run_automated(loaded, harness, model, pouch_dir)
+    loaded = load_task(config.tasks, task)
+    result = run_automated(loaded, harness, model, config.pouch)
     return result.run_id
 
 
@@ -42,8 +43,6 @@ def start(
     *,
     harness: HarnessParam,
     model: ModelParam,
-    pouch_dir: PouchOption = config.pouch,
-    tasks_dir: TasksOption = config.tasks,
 ) -> str:
     """Start a manual run: write a pending run and print setup instructions.
 
@@ -51,8 +50,8 @@ def start(
     prints the harness-specific setup instructions to stderr, and returns the
     new run id on stdout.
     """
-    loaded = load_task(tasks_dir, task)
-    pending, instructions = start_manual(loaded, harness, model, pouch_dir)
+    loaded = load_task(config.tasks, task)
+    pending, instructions = start_manual(loaded, harness, model, config.pouch)
     stderr.print(instructions)
     return pending.run_id
 
@@ -61,7 +60,6 @@ def harvest(
     run_id: str,
     *,
     session: str,
-    pouch_dir: PouchOption = config.pouch,
 ) -> str:
     """Harvest a pending manual run's externally-supplied session into a result.
 
@@ -69,5 +67,5 @@ def harvest(
     then returns the completed run id. Errors if the run id is unknown or has
     already been harvested.
     """
-    result = harvest_manual(run_id, session, pouch_dir)
+    result = harvest_manual(run_id, session, config.pouch)
     return result.run_id

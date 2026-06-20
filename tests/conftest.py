@@ -17,12 +17,28 @@ if TYPE_CHECKING:
 TaskWriter = Callable[..., Path]
 
 
+@pytest.fixture(autouse=True)
+def isolate_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point the config singleton's settings at this test's tmp_path.
+
+    The CLI reads `config.tasks` / `config.pouch` (no `--tasks`/`--pouch` flags
+    anymore), so monkeypatching the now-mutable `config` is how each test gets an
+    isolated tasks dir and pouch. Autouse so every test is isolated by default.
+    """
+    monkeypatch.setattr(config, "tasks", tmp_path / "tasks")
+    monkeypatch.setattr(config, "pouch", tmp_path / "pouch")
+
+
 @pytest.fixture
 def app() -> App:
     """Return a koalaty app wired for clean in-process invocation in tests.
 
-    `exit_on_error=False` lets validation errors raise instead of exiting, and
-    `result_action="return_value"` returns the command's value (e.g. run id).
+    The autouse `isolate_config` fixture runs first (autouse fixtures precede
+    explicitly-requested ones in the same scope), so the app is built *after*
+    `config` is pointed at the test's tmp_path — the dynamic task `Literal` is
+    built from `config.tasks` at `build_app` time. `exit_on_error=False` lets
+    validation errors raise instead of exiting, and `result_action="return_value"`
+    returns the command's value (e.g. the run id).
     """
     app = build_app()
     app.exit_on_error = False

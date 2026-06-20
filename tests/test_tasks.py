@@ -7,7 +7,7 @@ import pytest
 
 from koalaty.exceptions import TaskLoadError
 from koalaty.schemas.tasks import Turns
-from koalaty.tasks import load_task
+from koalaty.tasks import list_task_ids, load_task
 
 if TYPE_CHECKING:
     from tests.conftest import TaskWriter
@@ -157,3 +157,26 @@ def test_load_rejects_bad_task_id(tmp_path: Path, make_task: TaskWriter) -> None
     make_task(tmp_path, "quokka")
     with pytest.raises(TaskLoadError, match="Bad_Id"):
         load_task(tmp_path, "Bad_Id")
+
+
+def test_list_task_ids_returns_sorted_valid_ids(
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """list_task_ids returns the bundle ids, sorted, incl. dashed/digit ids."""
+    make_task(tmp_path, "wombat")
+    make_task(tmp_path, "quokka")
+    make_task(tmp_path, "3d-render")
+    assert list_task_ids(tmp_path) == ["3d-render", "quokka", "wombat"]
+
+
+def test_list_task_ids_ignores_non_task_entries(tmp_path: Path) -> None:
+    """Files and id-pattern-violating directories are not listed as tasks."""
+    (tmp_path / "Bad_Id").mkdir()
+    (tmp_path / "loose-file.txt").write_text("nope", encoding="utf-8")
+    assert list_task_ids(tmp_path) == []
+
+
+def test_list_task_ids_on_missing_dir_is_empty(tmp_path: Path) -> None:
+    """A missing tasks directory yields no ids rather than raising."""
+    assert list_task_ids(tmp_path / "does-not-exist") == []

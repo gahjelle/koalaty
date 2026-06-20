@@ -17,26 +17,13 @@ RUN_ID_RE = re.compile(r"^quokka-fake-opus48-\d{8}-[0-9a-f]{6}$")
 
 
 def start_args(
-    pouch: Path,
-    tasks: Path,
     *,
     task: str = "quokka",
     harness: str = "fake",
     model: str = "opus48",
 ) -> list[str]:
-    """Build the argv for a `start` invocation against `pouch` and `tasks`."""
-    return [
-        "start",
-        task,
-        "--harness",
-        harness,
-        "--model",
-        model,
-        "--pouch",
-        str(pouch),
-        "--tasks",
-        str(tasks),
-    ]
+    """Build the argv for a `start` invocation (pouch/tasks come from `config`)."""
+    return ["start", task, "--harness", harness, "--model", model]
 
 
 def test_start_writes_pending_and_returns_run_id(
@@ -47,8 +34,8 @@ def test_start_writes_pending_and_returns_run_id(
 ) -> None:
     """Start mints a run id, writes pending.json, and prints instructions on stderr."""
     pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
-    run_id = app(start_args(pouch, tasks))
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(start_args())
 
     assert RUN_ID_RE.fullmatch(run_id)
     run_dir = pouch / run_id
@@ -68,8 +55,8 @@ def test_start_accepts_interactive_task(
 ) -> None:
     """An interactive task is accepted by start (manual-only) and goes pending."""
     pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka", turns="interactive")
-    run_id = app(start_args(pouch, tasks))
+    make_task(tmp_path / "tasks", "quokka", turns="interactive")
+    run_id = app(start_args())
 
     pending = json.loads((pouch / run_id / "pending.json").read_text())
     assert pending["turns"] == "interactive"
@@ -83,11 +70,11 @@ def test_pending_run_is_ignored_by_compare(
 ) -> None:
     """A pending run lives in the pouch but compare reports no runs."""
     pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
-    run_id = app(start_args(pouch, tasks))
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(start_args())
     assert (pouch / run_id).is_dir()
 
-    app(["compare", "--pouch", str(pouch)])
+    app(["compare"])
     captured = capsys.readouterr()
     assert "no runs found" in captured.err
 
@@ -99,12 +86,10 @@ def test_harvest_completes_pending_run(
 ) -> None:
     """Harvest turns a pending run into a result.json and removes pending.json."""
     pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
-    run_id = app(start_args(pouch, tasks))
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(start_args())
 
-    harvested = app(
-        ["harvest", run_id, "--session", FAKE_SESSION_ID, "--pouch", str(pouch)]
-    )
+    harvested = app(["harvest", run_id, "--session", FAKE_SESSION_ID])
 
     assert harvested == run_id
     run_dir = pouch / run_id
@@ -122,12 +107,11 @@ def test_harvested_run_shows_up_in_compare(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Once harvested, the manual run is comparable like any other result."""
-    pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
-    run_id = app(start_args(pouch, tasks))
-    app(["harvest", run_id, "--session", FAKE_SESSION_ID, "--pouch", str(pouch)])
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(start_args())
+    app(["harvest", run_id, "--session", FAKE_SESSION_ID])
 
-    app(["compare", "--pouch", str(pouch)])
+    app(["compare"])
     captured = capsys.readouterr()
     assert "quokka" in captured.out
 
@@ -139,7 +123,5 @@ def test_harvest_rejects_unknown_run_id(
     """Harvesting an unknown run id fails and writes nothing."""
     pouch = tmp_path / "pouch"
     with pytest.raises(Exception, match="wombat-fake-opus48-x"):
-        app(
-            ["harvest", "wombat-fake-opus48-x", "--session", "s", "--pouch", str(pouch)]
-        )
+        app(["harvest", "wombat-fake-opus48-x", "--session", "s"])
     assert not pouch.exists() or not list(pouch.iterdir())

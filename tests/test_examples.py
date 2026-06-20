@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 def test_bundled_examples_ship_one_shot_and_scripted(app: App, tmp_path: Path) -> None:
     """The bundled examples include a one-shot `quokka` and a scripted task."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "--from-example", "quokka", "--tasks", str(tasks)])
-    app(["task", "new", "--from-example", "wombat", "--tasks", str(tasks)])
+    app(["task", "new", "--from-example", "quokka"])
+    app(["task", "new", "--from-example", "wombat"])
 
     quokka = load_task(tasks, "quokka")
     wombat = load_task(tasks, "wombat")
@@ -30,7 +30,7 @@ def test_bundled_examples_ship_one_shot_and_scripted(app: App, tmp_path: Path) -
 def test_from_example_defaults_id_to_example_name(app: App, tmp_path: Path) -> None:
     """`task new --from-example <name>` copies into `tasks/<name>/` verbatim."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "--from-example", "quokka", "--tasks", str(tasks)])
+    app(["task", "new", "--from-example", "quokka"])
 
     task_dir = tasks / "quokka"
     assert (task_dir / "task.toml").is_file()
@@ -42,7 +42,7 @@ def test_from_example_defaults_id_to_example_name(app: App, tmp_path: Path) -> N
 def test_from_example_explicit_id_copies_into_that_id(app: App, tmp_path: Path) -> None:
     """`task new <id> --from-example <name>` copies into `tasks/<id>/`."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "greeter", "--from-example", "quokka", "--tasks", str(tasks)])
+    app(["task", "new", "greeter", "--from-example", "quokka"])
 
     assert (tasks / "greeter" / "prompt.md").is_file()
     assert not (tasks / "quokka").exists()
@@ -57,7 +57,7 @@ def test_from_example_title_defaults_from_id_when_toml_omits_it(
 ) -> None:
     """A copied task whose `task.toml` lacks `title` defaults it from the id."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "--from-example", "quokka", "--tasks", str(tasks)])
+    app(["task", "new", "--from-example", "quokka"])
 
     toml = tasks / "quokka" / "task.toml"
     raw = tomllib.loads(toml.read_text(encoding="utf-8"))
@@ -82,7 +82,7 @@ def test_from_example_title_defaults_from_explicit_id_when_toml_omits_it(
 ) -> None:
     """`task new <id> --from-example <name>` defaults title from <id>, not <name>."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "greeter", "--from-example", "quokka", "--tasks", str(tasks)])
+    app(["task", "new", "greeter", "--from-example", "quokka"])
 
     toml = tasks / "greeter" / "task.toml"
     raw = tomllib.loads(toml.read_text(encoding="utf-8"))
@@ -105,7 +105,7 @@ def test_new_without_id_or_example_errors(app: App, tmp_path: Path) -> None:
     """`task new` with neither an id nor --from-example is an error."""
     tasks = tmp_path / "tasks"
     with pytest.raises(TaskScaffoldError):
-        app(["task", "new", "--tasks", str(tasks)])
+        app(["task", "new"])
     assert not tasks.exists() or list(tasks.iterdir()) == []
 
 
@@ -113,7 +113,7 @@ def test_unknown_example_errors_with_available_list(app: App, tmp_path: Path) ->
     """An unknown example name fails and lists the available examples."""
     tasks = tmp_path / "tasks"
     with pytest.raises(TaskScaffoldError, match="quokka") as excinfo:
-        app(["task", "new", "--from-example", "nope", "--tasks", str(tasks)])
+        app(["task", "new", "--from-example", "nope"])
     assert "nope" in str(excinfo.value)
     assert "wombat" in str(excinfo.value)
     assert not tasks.exists() or list(tasks.iterdir()) == []
@@ -127,7 +127,7 @@ def test_from_example_refuses_to_overwrite_existing(app: App, tmp_path: Path) ->
     (existing / "prompt.md").write_text("hand-written", encoding="utf-8")
 
     with pytest.raises(TaskScaffoldError, match="already exists"):
-        app(["task", "new", "--from-example", "quokka", "--tasks", str(tasks)])
+        app(["task", "new", "--from-example", "quokka"])
 
     assert (existing / "prompt.md").read_text(encoding="utf-8") == "hand-written"
     assert list(existing.iterdir()) == [existing / "prompt.md"]
@@ -137,9 +137,7 @@ def test_from_example_rejects_invalid_destination_id(app: App, tmp_path: Path) -
     """Copying obeys the id-validation rule from #18 before writing anything."""
     tasks = tmp_path / "tasks"
     with pytest.raises(TaskScaffoldError, match="Bad_Id"):
-        app(
-            ["task", "new", "Bad_Id", "--from-example", "quokka", "--tasks", str(tasks)]
-        )
+        app(["task", "new", "Bad_Id", "--from-example", "quokka"])
     assert not tasks.exists() or list(tasks.iterdir()) == []
 
 
@@ -162,26 +160,12 @@ def test_from_example_round_trips_through_run_and_compare(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Copy a scripted example, then run, then compare — the headline round-trip."""
-    tasks = tmp_path / "tasks"
     pouch = tmp_path / "pouch"
-    app(["task", "new", "--from-example", "wombat", "--tasks", str(tasks)])
+    app(["task", "new", "--from-example", "wombat"])
 
-    run_id = app(
-        [
-            "run",
-            "wombat",
-            "--harness",
-            "fake",
-            "--model",
-            "opus48",
-            "--pouch",
-            str(pouch),
-            "--tasks",
-            str(tasks),
-        ],
-    )
+    run_id = app(["run", "wombat", "--harness", "fake", "--model", "opus48"])
     assert (pouch / run_id / "result.json").is_file()
 
     capsys.readouterr()
-    app(["compare", "--pouch", str(pouch)])
+    app(["compare"])
     assert "wombat" in capsys.readouterr().out

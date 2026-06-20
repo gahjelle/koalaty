@@ -16,9 +16,26 @@ from koalaty.config import config
 from koalaty.exceptions import TaskLoadError
 from koalaty.schemas.tasks import Task, TaskConfig, Turns
 
-__all__ = ["load_task"]
+__all__ = ["list_task_ids", "load_task"]
 
 TASK_ID_RE = re.compile(config.task.id_pattern)
+
+
+def list_task_ids(tasks_dir: Path) -> list[str]:
+    """Return the sorted ids of the task bundles under `tasks_dir`.
+
+    A bundle is any subdirectory whose name matches the task-id pattern; the
+    contents are not validated here (that is `load_task`'s job). A missing
+    directory yields an empty list. Parallels `known_harnesses` in the adapter
+    registry — it feeds the CLI's dynamic task choices.
+    """
+    if not tasks_dir.is_dir():
+        return []
+    return sorted(
+        entry.name
+        for entry in tasks_dir.iterdir()
+        if entry.is_dir() and TASK_ID_RE.fullmatch(entry.name)
+    )
 
 
 def default_title(task_id: str) -> str:

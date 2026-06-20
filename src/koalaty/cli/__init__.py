@@ -7,7 +7,6 @@ command module stay focused on its own handlers.
 """
 
 import re
-from pathlib import Path
 from typing import Annotated
 
 from cyclopts import Parameter
@@ -18,8 +17,6 @@ from koalaty.config import config
 __all__ = [
     "HarnessParam",
     "ModelParam",
-    "PouchOption",
-    "TasksOption",
     "validate_harness",
     "validate_model",
 ]
@@ -46,11 +43,3 @@ def validate_model(_type: type, value: str) -> None:
 
 type HarnessParam = Annotated[str, Parameter(validator=validate_harness)]
 type ModelParam = Annotated[str, Parameter(validator=validate_model)]
-type PouchOption = Annotated[
-    Path,
-    Parameter(name="--pouch", help="Pouch directory (results store)."),
-]
-type TasksOption = Annotated[
-    Path,
-    Parameter(name="--tasks", help="Tasks directory (task bundles)."),
-]
