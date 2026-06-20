@@ -79,7 +79,7 @@ def test_render_grid_marks_empty_task_model_combos() -> None:
     rendered = [[str(cell) for cell in column.cells] for column in table.columns]
     # Columns: [task, opus48, sonnet46]; wombat has no opus48 run.
     assert rendered[0] == ["quokka", "wombat"]
-    assert "–" in rendered[1][1]  # noqa: RUF001 — en dash empty-cell glyph
+    assert "\N{EN DASH}" in rendered[1][1]
     assert "dim" in rendered[1][1]
 
 

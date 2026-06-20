@@ -62,7 +62,7 @@ def build_grid(results: Iterable[Result], harness: str) -> Grid:
 def render_cell(tally: Tally | None) -> str:
     """Render a cell: colored tally, or a dim dash for an empty combo."""
     if tally is None:
-        return "[dim]–[/dim]"  # noqa: RUF001 — en dash is the intended empty-cell glyph
+        return f"[dim]\N{EN DASH}[/dim]"
     if tally.failure == 0:
         return f"[green]{tally.success} ✓[/green]"
     if tally.success == 0:
