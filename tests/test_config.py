@@ -39,10 +39,23 @@ def test_invariants_are_a_shared_contract() -> None:
     assert config.result.result_file == "result.json"
 
 
-def test_config_is_frozen() -> None:
-    """The config singleton is immutable."""
+def test_invariant_sections_are_frozen() -> None:
+    """The invariant sub-sections remain immutable contracts."""
     with pytest.raises(Exception, match="frozen"):
         config.task.task_file = "other.toml"
+
+
+def test_config_is_mutable_strict_model(tmp_path: Path) -> None:
+    """Config is a mutable StrictModel: settings reassign, extras forbidden.
+
+    Mutability is what lets tests monkeypatch `config.tasks`/`config.pouch` for
+    isolation now that the `--tasks`/`--pouch` flags are gone (ADR-0010).
+    """
+    loaded = load_config()
+    loaded.tasks = tmp_path / "elsewhere"
+    assert loaded.tasks == tmp_path / "elsewhere"
+    assert loaded.model_config["extra"] == "forbid"
+    assert not loaded.model_config.get("frozen", False)
 
 
 def test_show_config_via_cli(app: App, capsys: pytest.CaptureFixture[str]) -> None:

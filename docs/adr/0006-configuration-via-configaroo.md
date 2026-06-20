@@ -1,5 +1,12 @@
 # Configuration via configaroo: a packaged registry and global singleton
 
+> **Partially superseded by [ADR-0010](0010-settings-env-only-mutable-config.md):**
+> the `--pouch`/`--tasks` CLI flags are dropped (settings are env + default
+> only), `Config` is now a mutable `StrictModel` rather than frozen, and test
+> isolation monkeypatches `config` instead of threading flags. The two-layer
+> registry (settings vs. invariants) and configaroo's ownership of file + env +
+> defaults are unchanged.
+
 Koalaty's literal values — both user-facing settings (pouch/tasks locations) and
 fixed invariants (task filenames, the task-id pattern, the model/canonical-name
 pattern, turn separator, result/run-id layout) — are collected into one packaged

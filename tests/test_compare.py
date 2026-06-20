@@ -89,25 +89,11 @@ def test_compare_prints_grid(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Compare prints a grid titled with the harness for runs in the pouch."""
-    pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
-    app(
-        [
-            "run",
-            "quokka",
-            "--harness",
-            "fake",
-            "--model",
-            "opus48",
-            "--pouch",
-            str(pouch),
-            "--tasks",
-            str(tasks),
-        ]
-    )
+    make_task(tmp_path / "tasks", "quokka")
+    app(["run", "quokka", "--harness", "fake", "--model", "opus48"])
     capsys.readouterr()
 
-    app(["compare", "--pouch", str(pouch)])
+    app(["compare"])
     out = capsys.readouterr().out
     assert "quokka" in out
     assert "opus48" in out
@@ -121,27 +107,13 @@ def test_compare_task_argument_narrows_rows(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The optional task argument narrows the harness tables to that task's row."""
-    pouch = tmp_path / "pouch"
-    tasks = make_task(tmp_path / "tasks", "quokka")
+    make_task(tmp_path / "tasks", "quokka")
     make_task(tmp_path / "tasks", "wombat")
     for task in ("quokka", "wombat"):
-        app(
-            [
-                "run",
-                task,
-                "--harness",
-                "fake",
-                "--model",
-                "opus48",
-                "--pouch",
-                str(pouch),
-                "--tasks",
-                str(tasks),
-            ]
-        )
+        app(["run", task, "--harness", "fake", "--model", "opus48"])
     capsys.readouterr()
 
-    app(["compare", "wombat", "--pouch", str(pouch)])
+    app(["compare", "wombat"])
     out = capsys.readouterr().out
     assert "wombat" in out
     assert "quokka" not in out
@@ -153,7 +125,7 @@ def test_compare_friendly_when_empty(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Compare reports a friendly message when the pouch has no runs."""
-    app(["compare", "--pouch", str(tmp_path)])
+    app(["compare"])
     err = capsys.readouterr().err
     assert "no runs found" in err
     assert str(tmp_path) in err

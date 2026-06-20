@@ -1,13 +1,13 @@
 """Configuration schemas: the shape of koalaty's packaged registry.
 
-Two layers live here. *Settings* (`pouch`, `tasks`) are overridable top-level
+Two layers live here. *Settings* (`pouch`, `tasks`) are env-overridable top-level
 paths; *invariants* (`task`, `model`, `result`, `run_id`) are fixed contracts
-shared across modules — never env- or flag-overridable (see ADR-0006).
+shared across modules — never overridable (see ADR-0006, ADR-0010).
 """
 
 from pathlib import Path
 
-from koalaty.schemas import FrozenModel
+from koalaty.schemas import FrozenModel, StrictModel
 
 __all__ = ["Config", "ModelRules", "ResultLayout", "RunId", "TaskFiles"]
 
@@ -45,8 +45,13 @@ class RunId(FrozenModel):
     shortid_length: int
 
 
-class Config(FrozenModel):
-    """koalaty's full configuration: overridable settings plus fixed invariants."""
+class Config(StrictModel):
+    """koalaty's full configuration: settings plus fixed invariants.
+
+    A mutable `StrictModel` (not frozen): the settings (`pouch`, `tasks`) are
+    resolved once at import, but staying mutable lets tests monkeypatch them for
+    isolation. The invariant sub-sections remain frozen models. See ADR-0010.
+    """
 
     pouch: Path
     tasks: Path

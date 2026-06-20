@@ -29,10 +29,10 @@ rule and how to satisfy it:
   annotations lazily (PEP 649), so the import is dead weight. Delete it; quote
   any annotation that genuinely needs deferring, or guard the import under
   `if TYPE_CHECKING:`.
-- **KOA002 — Pydantic models inherit `FrozenModel`, never `BaseModel` directly.**
-  `FrozenModel` (`koalaty.schemas`) is a thin project base — a
-  `pydantic.BaseModel` that forbids extra fields and freezes instances — and is
-  the one class allowed to subclass `BaseModel`. Inherit it for every model.
+- **KOA002 — Pydantic models inherit `FrozenModel`/`StrictModel`, never `BaseModel` directly.**
+  These are thin project bases (`koalaty.schemas`) — `BaseModel` subclasses that
+  forbid extra fields — and are the only classes allowed to subclass `BaseModel`.
+  Inherit `FrozenModel` for immutable models, `StrictModel` for mutable ones.
 - **KOA003 — `Protocol` methods omit the `...` body.** The docstring is body
   enough; drop the trailing `...`.
 - **KOA004 — docstrings use single backticks, never double.** Write `` `code` ``,

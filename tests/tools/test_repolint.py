@@ -53,9 +53,16 @@ def test_flags_bare_basemodel_subclass() -> None:
     assert "KOA002" in _codes(source)
 
 
-def test_allows_strict_model_itself() -> None:
-    """FrozenModel is the one class permitted to inherit BaseModel."""
+def test_allows_frozen_model_itself() -> None:
+    """FrozenModel is a project base permitted to inherit BaseModel."""
     source = "class FrozenModel(BaseModel):\n    pass\n"
+
+    assert "KOA002" not in _codes(source)
+
+
+def test_allows_strict_model_itself() -> None:
+    """StrictModel is the other project base permitted to inherit BaseModel."""
+    source = "class StrictModel(BaseModel):\n    pass\n"
 
     assert "KOA002" not in _codes(source)
 

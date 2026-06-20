@@ -3,7 +3,7 @@
 Encodes the rules in the `repo-coding-conventions` policy:
 
   KOA001  no `from __future__ import annotations` (3.14 evaluates annotations lazily)
-  KOA002  Pydantic models inherit `FrozenModel`, never `BaseModel` directly
+  KOA002  Pydantic models inherit `FrozenModel`/`StrictModel`, never `BaseModel`
   KOA003  `Protocol` methods omit `...` — the docstring is body enough
   KOA004  docstrings use single backticks, never double
   KOA005  homogeneous sequences use `list`, not `tuple[T, ...]`
@@ -114,7 +114,10 @@ def _check_future_import(tree: ast.Module, path: Path) -> Iterator[Violation]:
 
 def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
     for node in ast.walk(tree):
-        if not isinstance(node, ast.ClassDef) or node.name == "FrozenModel":
+        if not isinstance(node, ast.ClassDef) or node.name in {
+            "FrozenModel",
+            "StrictModel",
+        }:
             continue
         if any(_is_named(base, "BaseModel") for base in node.bases):
             yield Violation(
@@ -122,7 +125,10 @@ def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
                 node.lineno,
                 node.col_offset + 1,
                 "KOA002",
-                f"`{node.name}` must inherit `FrozenModel`, not `BaseModel`",
+                (
+                    f"`{node.name}` must subclass `StrictModel` or `FrozenModel`,"
+                    " not `BaseModel`"
+                ),
             )
 
 
