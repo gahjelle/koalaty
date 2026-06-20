@@ -37,3 +37,4 @@ class Result(FrozenModel):
     summary: str
     tags: list[str]
     turns: Turns
+    joey: bool = False
