@@ -29,7 +29,7 @@ def test_run_automated_writes_result_and_returns_it(
     task = load_task(tasks_dir, "quokka")
 
     now = datetime(2026, 6, 18, 14, 0, 0, tzinfo=UTC)
-    result = run_automated(task, "fake", "opus48", pouch, now=now)
+    result = run_automated(task, "fake", "opus48", pouch_dir=pouch, now=now)
 
     assert result.task == "quokka"
     assert result.harness == "fake"
@@ -56,7 +56,7 @@ def test_run_automated_rejects_unknown_harness(
     task = load_task(tasks_dir, "quokka")
 
     with pytest.raises(ValueError, match="claudecode"):
-        run_automated(task, "claudecode", "opus48", pouch)
+        run_automated(task, "claudecode", "opus48", pouch_dir=pouch)
 
     assert not pouch.exists() or not list(pouch.iterdir())
 
@@ -71,7 +71,7 @@ def test_run_automated_rejects_interactive_task(
     task = load_task(tasks_dir, "quokka")
 
     with pytest.raises(ValueError, match="interactive"):
-        run_automated(task, "fake", "opus48", pouch)
+        run_automated(task, "fake", "opus48", pouch_dir=pouch)
 
     assert not pouch.exists() or not list(pouch.iterdir())
 
@@ -86,7 +86,9 @@ def test_start_manual_writes_pending_and_returns_it(
     task = load_task(tasks_dir, "quokka")
 
     now = datetime(2026, 6, 18, 14, 0, 0, tzinfo=UTC)
-    pending, instructions = start_manual(task, "fake", "opus48", pouch, now=now)
+    pending, instructions = start_manual(
+        task, "fake", "opus48", pouch_dir=pouch, now=now
+    )
 
     assert pending.task == "quokka"
     assert pending.harness == "fake"
@@ -113,7 +115,7 @@ def test_harvest_manual_completes_pending_into_result(
     tasks_dir = make_task(tmp_path / "tasks", "quokka", tags=["drop-bear"])
     task = load_task(tasks_dir, "quokka")
 
-    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
     result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
 
     assert result.run_id == pending.run_id
@@ -154,7 +156,7 @@ def test_harvest_manual_rejects_already_harvested_run(
     tasks_dir = make_task(tmp_path / "tasks", "quokka")
     task = load_task(tasks_dir, "quokka")
 
-    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
     harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
 
     with pytest.raises(HarvestError, match=pending.run_id):
@@ -171,6 +173,6 @@ def test_harvest_manual_rejects_unknown_session_id(
     tasks_dir = make_task(tmp_path / "tasks", "quokka")
     task = load_task(tasks_dir, "quokka")
 
-    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
     with pytest.raises(ValueError, match="bogus-session-id"):
         harvest_manual(pending.run_id, "bogus-session-id", pouch, ask=stub_asker())

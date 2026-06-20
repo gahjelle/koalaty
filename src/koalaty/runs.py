@@ -33,8 +33,9 @@ def run_automated(
     task: Task,
     harness: str,
     model: str,
-    pouch_dir: Path,
     *,
+    pouch_dir: Path,
+    joey: bool = False,
     now: datetime | None = None,
 ) -> Result:
     """Run a task on a model in a harness and store the result in the pouch.
@@ -42,7 +43,7 @@ def run_automated(
     Validates that the harness supports headless invocation and that the task
     is not interactive, then invokes the adapter, harvests the session,
     assembles the Result, and writes its run directory. Nothing is written on
-    any rejection.
+    any rejection. `joey` marks the result as a throwaway trial run.
     """
     adapter = require_adapter(harness)
 
@@ -58,7 +59,7 @@ def run_automated(
         raise ValueError(msg)
 
     started = now or datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model, started)
+    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model=model, now=started)
 
     session_id = adapter.invoke(task, model)
     harvested = adapter.harvest(session_id)
@@ -75,6 +76,7 @@ def run_automated(
         summary=harvested.summary,
         tags=task.tags,
         turns=task.turns,
+        joey=joey,
     )
     pouch.write_run(pouch_dir, result, harvested.raw)
 
@@ -85,21 +87,23 @@ def start_manual(
     task: Task,
     harness: str,
     model: str,
-    pouch_dir: Path,
     *,
+    pouch_dir: Path,
+    joey: bool = False,
     now: datetime | None = None,
 ) -> tuple[PendingRun, str]:
     """Start a manual run: mint an id, write `pending.json`, return setup instructions.
 
     Asks the adapter for harness-specific setup instructions but never invokes
     the harness — a human drives the session by hand (see ADR-0009). The run's
-    driver is recorded as `human`. `interactive` tasks are accepted. Returns the
-    written `PendingRun` and the instructions to show the human.
+    driver is recorded as `human`. `interactive` tasks are accepted. `joey` marks
+    the pending run as a throwaway trial. Returns the written `PendingRun` and the
+    instructions to show the human.
     """
     adapter = require_adapter(harness)
 
     started = now or datetime.now(UTC)
-    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model, started)
+    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model=model, now=started)
 
     instructions = adapter.start(task, model)
 
@@ -111,6 +115,7 @@ def start_manual(
         driver="human",
         turns=task.turns,
         tags=task.tags,
+        joey=joey,
         created_at=started,
     )
     pouch.write_pending(pouch_dir, pending)
@@ -124,6 +129,7 @@ def harvest_manual(
     pouch_dir: Path,
     *,
     ask: Asker,
+    joey: bool | None = None,
 ) -> Result:
     """Complete a pending manual run by harvesting its externally-supplied session.
 
@@ -132,6 +138,8 @@ def harvest_manual(
     assembles the Result (driver `human`, task/harness/model/turns/tags from the
     pending run), writes its run directory, and removes `pending.json`. An
     unknown or already-harvested run id raises `HarvestError` and writes nothing.
+    `joey` overrides the throwaway flag on the result; left as `None`, the
+    pending run's value carries through.
     """
     pending = pouch.read_pending(pouch_dir, run_id)
     adapter = require_adapter(pending.harness)
@@ -151,6 +159,7 @@ def harvest_manual(
         summary=harvested.summary,
         tags=pending.tags,
         turns=pending.turns,
+        joey=pending.joey if joey is None else joey,
         survey=survey,
     )
     pouch.write_run(pouch_dir, result, harvested.raw)

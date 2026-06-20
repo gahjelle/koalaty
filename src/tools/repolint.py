@@ -10,6 +10,7 @@ Encodes the rules in the `repo-coding-conventions` policy:
   KOA006  return `Self`, never a string forward-ref to the enclosing class
   KOA007  no possessive `my` prefix (`my`+_/-, `My`+uppercase) in code or docs
   KOA008  ruff-exempt modules stay at runtime, not in TYPE_CHECKING
+  KOA009  at most 3 positional parameters — use keyword-only args beyond that
 
 Run: `uv run python -m tools.repolint [paths...]` (defaults to `src/` and `tests/`).
 Pass `--fix` to auto-apply the safe textual fixes (KOA001, KOA004).
@@ -230,6 +231,35 @@ def _check_exempt_in_type_checking(tree: ast.Module, path: Path) -> Iterator[Vio
                 )
 
 
+MAX_POSITIONAL_ARGS = 3
+
+
+def _check_positional_args(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    class_parents: dict[int, type[ast.AST]] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            class_parents[id(child)] = type(parent)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        if node.name.startswith("test_"):
+            continue
+        positional = node.args.args
+        if class_parents.get(id(node)) is ast.ClassDef:
+            positional = positional[1:]
+        if len(positional) > MAX_POSITIONAL_ARGS:
+            yield Violation(
+                path,
+                node.lineno,
+                node.col_offset + 1,
+                "KOA009",
+                (
+                    f"too many positional args ({len(positional)}"
+                    f" > {MAX_POSITIONAL_ARGS}); use * to make some keyword-only"
+                ),
+            )
+
+
 CHECKS = (
     _check_future_import,
     _check_strict_model,
@@ -238,6 +268,7 @@ CHECKS = (
     _check_homogeneous_tuple,
     _check_self_forward_ref,
     _check_exempt_in_type_checking,
+    _check_positional_args,
 )
 
 

@@ -39,7 +39,7 @@ def default_shortid() -> str:
     return uuid4().hex[: config.run_id.shortid_length]
 
 
-def mint_run_id(  # noqa: PLR0913 — is_taken/new_shortid are injected test seams
+def mint_run_id(
     task: str,
     harness: str,
     model: str,
@@ -60,7 +60,9 @@ def mint_run_id(  # noqa: PLR0913 — is_taken/new_shortid are injected test sea
             return run_id
 
 
-def new_run_id(pouch: Path, task: str, harness: str, model: str, now: datetime) -> str:
+def new_run_id(
+    pouch: Path, task: str, harness: str, *, model: str, now: datetime
+) -> str:
     """Mint a run id whose directory does not yet exist under `pouch`."""
     return mint_run_id(
         task,

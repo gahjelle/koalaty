@@ -116,7 +116,7 @@ def make_task() -> TaskWriter:
     the `[gum]` table so error cases can author it directly.
     """
 
-    def _write(  # noqa: PLR0913 — a task bundle has many optional parts
+    def _write(
         tasks_root: Path,
         task_id: str,
         *,

@@ -56,7 +56,7 @@ def test_harvest_stores_survey_on_result(
     """harvest_manual collects the survey via the asker and stores it on the result."""
     make_task(config.tasks, "quokka")
     task = load_task(config.tasks, "quokka")
-    pending, _ = start_manual(task, "fake", "opus48", config.pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=config.pouch)
 
     result = harvest_manual(
         pending.run_id,
@@ -92,7 +92,7 @@ def test_automated_run_carries_no_survey(make_task: TaskWriter) -> None:
     make_task(config.tasks, "quokka")
     task = load_task(config.tasks, "quokka")
 
-    result = run_automated(task, "fake", "opus48", config.pouch)
+    result = run_automated(task, "fake", "opus48", pouch_dir=config.pouch)
 
     assert result.survey is None
     stored = json.loads((config.pouch / result.run_id / "result.json").read_text())

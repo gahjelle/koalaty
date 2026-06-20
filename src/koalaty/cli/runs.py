@@ -25,14 +25,16 @@ def run(
     *,
     harness: HarnessParam,
     model: ModelParam,
+    joey: bool = False,
 ) -> str:
     """Run a task on a model in a harness and store the result in the pouch.
 
     Loads the task from disk, delegates to run_automated for the full
-    pipeline, and returns the new run id.
+    pipeline, and returns the new run id. `--joey` marks the result as a
+    throwaway trial run.
     """
     loaded = load_task(config.tasks, task)
-    result = run_automated(loaded, harness, model, config.pouch)
+    result = run_automated(loaded, harness, model, pouch_dir=config.pouch, joey=joey)
     return result.run_id
 
 
@@ -41,15 +43,18 @@ def start(
     *,
     harness: HarnessParam,
     model: ModelParam,
+    joey: bool = False,
 ) -> str:
     """Start a manual run: write a pending run and print setup instructions.
 
     Loads the task, delegates to start_manual (which never invokes the harness),
     prints the harness-specific setup instructions to stderr, and returns the
-    new run id on stdout.
+    new run id on stdout. `--joey` marks the pending run as a throwaway trial.
     """
     loaded = load_task(config.tasks, task)
-    pending, instructions = start_manual(loaded, harness, model, config.pouch)
+    pending, instructions = start_manual(
+        loaded, harness, model, pouch_dir=config.pouch, joey=joey
+    )
     stderr.print(instructions)
     return pending.run_id
 
@@ -58,13 +63,17 @@ def harvest(
     run_id: str,
     *,
     session: str,
+    joey: bool | None = None,
 ) -> str:
     """Harvest a pending manual run's externally-supplied session into a result.
 
     Wires the interactive survey asker (read at call time so tests can stub it),
     delegates to harvest_manual, which runs the survey, writes result.json and
     removes pending.json, then returns the completed run id. Errors if the run id
-    is unknown or has already been harvested.
+    is unknown or has already been harvested. `--joey`/`--no-joey` sets or clears
+    the throwaway flag; left off, the pending run's value carries through.
     """
-    result = harvest_manual(run_id, session, config.pouch, ask=survey.make_asker())
+    result = harvest_manual(
+        run_id, session, config.pouch, ask=survey.make_asker(), joey=joey
+    )
     return result.run_id
