@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from koalaty.schemas import FrozenModel
+from koalaty.schemas.survey import Survey
 from koalaty.schemas.tasks import Turns
 
 __all__ = ["SCHEMA_VERSION", "Outcome", "Result"]
@@ -37,3 +38,4 @@ class Result(FrozenModel):
     summary: str
     tags: list[str]
     turns: Turns
+    survey: Survey | None = None

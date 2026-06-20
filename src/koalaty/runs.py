@@ -14,6 +14,7 @@ from koalaty.adapters.base import Adapter, InvocableAdapter
 from koalaty.schemas.pending import PendingRun
 from koalaty.schemas.result import Result
 from koalaty.schemas.tasks import Task, Turns
+from koalaty.survey import Asker, collect_survey
 
 __all__ = ["harvest_manual", "run_automated", "start_manual"]
 
@@ -117,18 +118,26 @@ def start_manual(
     return pending, instructions
 
 
-def harvest_manual(run_id: str, session_id: str, pouch_dir: Path) -> Result:
+def harvest_manual(
+    run_id: str,
+    session_id: str,
+    pouch_dir: Path,
+    *,
+    ask: Asker,
+) -> Result:
     """Complete a pending manual run by harvesting its externally-supplied session.
 
-    Loads the pending run, hands `session_id` to the adapter, assembles the
-    Result (driver `human`, task/harness/model/turns/tags from the pending run),
-    writes its run directory, and removes `pending.json`. An unknown or
-    already-harvested run id raises `HarvestError` and writes nothing.
+    Loads the pending run, hands `session_id` to the adapter, runs the survey
+    through the injected `ask` (manual runs carry a survey; see ADR-0009),
+    assembles the Result (driver `human`, task/harness/model/turns/tags from the
+    pending run), writes its run directory, and removes `pending.json`. An
+    unknown or already-harvested run id raises `HarvestError` and writes nothing.
     """
     pending = pouch.read_pending(pouch_dir, run_id)
     adapter = require_adapter(pending.harness)
 
     harvested = adapter.harvest(session_id)
+    survey = collect_survey(ask)
 
     result = Result(
         run_id=pending.run_id,
@@ -142,6 +151,7 @@ def harvest_manual(run_id: str, session_id: str, pouch_dir: Path) -> Result:
         summary=harvested.summary,
         tags=pending.tags,
         turns=pending.turns,
+        survey=survey,
     )
     pouch.write_run(pouch_dir, result, harvested.raw)
     pouch.remove_pending(pouch_dir, run_id)
