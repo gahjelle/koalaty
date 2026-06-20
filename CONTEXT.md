@@ -17,7 +17,7 @@ An agent CLI/tool that drives a model through a session (e.g. Claude Code, Copil
 _Avoid_: tool, agent, CLI
 
 **adapter**:
-The per-harness implementation that hides harness-specific quirks. Exposes `harvest` (required) and `invoke` (optional; absent ⇒ harness is manual-only). The hard part is **harvest normalization** — each harness stores sessions differently.
+The per-harness implementation that hides harness-specific quirks. Exposes `start` (required — returns the harness-tailored manual setup instructions, including how to obtain the **session** id to **harvest** with) and `harvest` (required), plus `invoke` (optional; absent ⇒ harness is manual-only, but `start`/`harvest` still work). The manual feed is uniform across harnesses — only the `start` instruction text differs. The hard part is **harvest normalization** — each harness stores sessions differently.
 _Avoid_: plugin, backend, driver (taken)
 
 **harvest**:
@@ -63,7 +63,7 @@ The normalized, stored record a run produces and that lives in the **pouch**. Th
 _Avoid_: report, record, output, outcome
 
 **driver**:
-Who steers the session: `koalaty` (automated run — koalaty invokes the harness, then harvests) or `human` (manual run — you drive in your own terminal, koalaty harvests by session ID). *Derived*, not authored: `human` when the task is `interactive` or the harness has no headless mode, else `koalaty`. Recorded on the **result** for filtering.
+Who steers the session: `koalaty` (automated run — koalaty invokes the harness, then harvests) or `human` (manual run — you drive in your own terminal, koalaty harvests by session ID). *Derived from the feed that produced the run*, not authored: the manual feed (`start`/`harvest`) always records `human`; the automated feed (`run`) always records `koalaty`. Which feed a task may use is a separate **routing** rule (an `interactive` task or a harness with no headless mode is manual-only); a human may still choose the manual feed for an otherwise-automatable task, and `driver` then honestly records `human`. Recorded on the **result** for filtering.
 _Avoid_: mode, runner, source
 
 **gum**:
