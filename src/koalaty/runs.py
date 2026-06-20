@@ -14,7 +14,18 @@ from koalaty.adapters.base import InvocableAdapter
 from koalaty.schemas.result import Result
 from koalaty.schemas.tasks import Task, Turns
 
-__all__ = ["run_automated"]
+__all__ = ["derive_driver", "run_automated"]
+
+
+def derive_driver(*, can_invoke: bool, interactive: bool) -> str:
+    """Derive who steers a session: `koalaty` (automated) or `human`.
+
+    A run is human-driven when the task needs interactive judgment or the
+    harness has no headless `invoke`; otherwise koalaty drives it.
+    """
+    if interactive or not can_invoke:
+        return "human"
+    return "koalaty"
 
 
 def run_automated(

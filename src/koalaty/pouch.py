@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
+from koalaty.config import config
 from koalaty.schemas.result import Result
 
 if TYPE_CHECKING:
@@ -18,13 +19,13 @@ if TYPE_CHECKING:
 
 __all__ = ["mint_run_id", "new_run_id", "read_results", "write_run"]
 
-RESULT_FILE = "result.json"
-RAW_SESSION_FILE = "raw/session.json"
+RESULT_FILE = config.result.result_file
+RAW_SESSION_FILE = config.result.raw_session_file
 
 
 def default_shortid() -> str:
-    """Return a fresh 6-hex-character short id."""
-    return uuid4().hex[:6]
+    """Return a fresh short id of the configured hex length."""
+    return uuid4().hex[: config.run_id.shortid_length]
 
 
 def mint_run_id(  # noqa: PLR0913 — is_taken/new_shortid are injected test seams
@@ -41,7 +42,7 @@ def mint_run_id(  # noqa: PLR0913 — is_taken/new_shortid are injected test sea
     `now` is the UTC run-start instant. The shortid is regenerated while
     `is_taken` reports a collision, so the returned id names a free directory.
     """
-    date = now.strftime("%Y%m%d")
+    date = now.strftime(config.run_id.date_format)
     while True:
         run_id = f"{task}-{harness}-{model}-{date}-{new_shortid()}"
         if not is_taken(run_id):
