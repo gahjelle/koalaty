@@ -19,9 +19,8 @@ class PendingRun(FrozenModel):
     """A manual run awaiting its session, serialized as `pending.json`.
 
     Written by `start` and removed by `harvest`. `driver` is always `human`
-    for a manual run (ADR-0009); task, harness, model, turns, and tags ride
-    through to the assembled `Result` so the harvested session need not carry
-    them.
+    for a manual run (ADR-0009); fields that `start` knows ride through to
+    the assembled `Result` so the harvested session need not carry them.
     """
 
     schema_version: int = SCHEMA_VERSION

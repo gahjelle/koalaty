@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from koalaty.adapters.fake import FAKE_SESSION_ID
+from koalaty.runs import harvest_manual, start_manual
+from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
     from cyclopts import App
@@ -76,6 +78,20 @@ def test_harvest_no_joey_clears_pending(
     assert result["joey"] is False
 
 
+def test_start_defaults_to_not_joey(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Without the flag, a started run is not a joey — the flag defaults to false."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(["start", "quokka", "--harness", "fake", "--model", "opus48"])
+
+    pending = json.loads((pouch / run_id / "pending.json").read_text())
+    assert pending["joey"] is False
+
+
 def test_start_records_joey_on_pending(
     app: App,
     tmp_path: Path,
@@ -107,3 +123,17 @@ def test_start_joey_carries_through_harvest(
 
     result = json.loads((pouch / run_id / "result.json").read_text())
     assert result["joey"] is True
+
+
+def test_harvest_manual_joey_carry_through(
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """`harvest_manual` carries the pending run's joey flag when `joey=None`."""
+    make_task(tmp_path / "tasks", "quokka")
+    pouch_dir = tmp_path / "pouch"
+    task = load_task(tmp_path / "tasks", "quokka")
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir, joey=True)
+    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch_dir)
+
+    assert result.joey is True
