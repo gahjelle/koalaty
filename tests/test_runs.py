@@ -14,7 +14,9 @@ from koalaty.schemas.result import Outcome
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
-    from tests.conftest import TaskWriter
+    from collections.abc import Callable
+
+    from tests.conftest import StubAsker, TaskWriter
 
 
 def test_run_automated_writes_result_and_returns_it(
@@ -106,6 +108,7 @@ def test_start_manual_writes_pending_and_returns_it(
 def test_harvest_manual_completes_pending_into_result(
     tmp_path: Path,
     make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
 ) -> None:
     """harvest_manual writes result.json (driver=human) and removes pending.json."""
     pouch = tmp_path / "pouch"
@@ -113,7 +116,7 @@ def test_harvest_manual_completes_pending_into_result(
     task = load_task(tasks_dir, "quokka")
 
     pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
-    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
+    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
 
     assert result.run_id == pending.run_id
     assert result.task == "quokka"
@@ -130,12 +133,15 @@ def test_harvest_manual_completes_pending_into_result(
     assert not (run_dir / "pending.json").exists()
 
 
-def test_harvest_manual_rejects_unknown_run_id(tmp_path: Path) -> None:
+def test_harvest_manual_rejects_unknown_run_id(
+    tmp_path: Path,
+    stub_asker: Callable[..., StubAsker],
+) -> None:
     """Harvesting an unknown run id errors and writes nothing."""
     pouch = tmp_path / "pouch"
 
     with pytest.raises(HarvestError, match="quokka-fake-opus48-x"):
-        harvest_manual("quokka-fake-opus48-x", FAKE_SESSION_ID, pouch)
+        harvest_manual("quokka-fake-opus48-x", FAKE_SESSION_ID, pouch, ask=stub_asker())
 
     assert not pouch.exists() or not list(pouch.iterdir())
 
@@ -143,6 +149,7 @@ def test_harvest_manual_rejects_unknown_run_id(tmp_path: Path) -> None:
 def test_harvest_manual_rejects_already_harvested_run(
     tmp_path: Path,
     make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
 ) -> None:
     """Re-harvesting a completed run errors; the first result is untouched."""
     pouch = tmp_path / "pouch"
@@ -150,15 +157,16 @@ def test_harvest_manual_rejects_already_harvested_run(
     task = load_task(tasks_dir, "quokka")
 
     pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
-    harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
+    harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
 
     with pytest.raises(HarvestError, match=pending.run_id):
-        harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
+        harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
 
 
 def test_harvest_manual_rejects_unknown_session_id(
     tmp_path: Path,
     make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
 ) -> None:
     """Harvesting with a session id the adapter doesn't recognize errors."""
     pouch = tmp_path / "pouch"
@@ -167,4 +175,4 @@ def test_harvest_manual_rejects_unknown_session_id(
 
     pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
     with pytest.raises(ValueError, match="bogus-session-id"):
-        harvest_manual(pending.run_id, "bogus-session-id", pouch)
+        harvest_manual(pending.run_id, "bogus-session-id", pouch, ask=stub_asker())

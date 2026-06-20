@@ -14,8 +14,10 @@ from koalaty.runs import harvest_manual, start_manual
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from cyclopts import App
-    from tests.conftest import TaskWriter
+    from tests.conftest import StubAsker, TaskWriter
 
 
 def test_run_defaults_to_not_joey(
@@ -128,12 +130,15 @@ def test_start_joey_carries_through_harvest(
 def test_harvest_manual_joey_carry_through(
     tmp_path: Path,
     make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
 ) -> None:
     """`harvest_manual` carries the pending run's joey flag when `joey=None`."""
     make_task(tmp_path / "tasks", "quokka")
     pouch_dir = tmp_path / "pouch"
     task = load_task(tmp_path / "tasks", "quokka")
     pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch_dir, joey=True)
-    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch_dir)
+    result = harvest_manual(
+        pending.run_id, FAKE_SESSION_ID, pouch_dir, ask=stub_asker()
+    )
 
     assert result.joey is True

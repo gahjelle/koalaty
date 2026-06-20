@@ -2,11 +2,13 @@
 
 import textwrap
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
+from koalaty import survey
 from koalaty.cli.main import build_app
 from koalaty.config import config
 
@@ -15,6 +17,66 @@ if TYPE_CHECKING:
 
 # A helper that writes a `tasks/<id>/` bundle on disk and returns its root.
 TaskWriter = Callable[..., Path]
+
+
+class StubAsker:
+    """A non-interactive `Asker`: ratings answered in call order, fixed notes.
+
+    The injected test seam for the survey (the analogue of the fake adapter),
+    so harvest never blocks on real stdin. `collect_survey` asks the three
+    ratings in friction → hand-holding → frustration order, so `ratings` maps
+    to those fields positionally.
+    """
+
+    def __init__(
+        self, ratings: list[int] | None = None, notes: str = "it was fine"
+    ) -> None:
+        """Answer ratings from `ratings` (in order) and notes with `notes`."""
+        self.ratings = iter(ratings if ratings is not None else [2, 3, 1])
+        self.notes = notes
+
+    def rating(self, prompt: str) -> int:  # noqa: ARG002 — prompt unused by the stub
+        """Return the next canned rating."""
+        return next(self.ratings)
+
+    def text(self, prompt: str) -> str:  # noqa: ARG002 — prompt unused by the stub
+        """Return the canned free-text notes."""
+        return self.notes
+
+
+@dataclass
+class SurveyStub:
+    """Configurable survey answers a test can tweak before harvesting."""
+
+    ratings: list[int] = field(default_factory=lambda: [2, 3, 1])
+    notes: str = "it was fine"
+
+
+@pytest.fixture(autouse=True)
+def survey_stub(monkeypatch: pytest.MonkeyPatch) -> SurveyStub:
+    """Swap the interactive survey asker for a stub so harvest never blocks.
+
+    Autouse so any CLI `harvest` stays hermetic; returns the answer holder so a
+    test can set `survey_stub.ratings` / `.notes` to assert what gets stored.
+    A fresh `StubAsker` per call keeps the rating iterator unexhausted.
+    """
+    stub = SurveyStub()
+    monkeypatch.setattr(
+        survey, "make_asker", lambda: StubAsker(stub.ratings, stub.notes)
+    )
+    return stub
+
+
+@pytest.fixture
+def stub_asker() -> Callable[..., StubAsker]:
+    """Return a builder for prebaked-answer Askers — the single survey test seam.
+
+    Call with explicit answers (`stub_asker([2, 4, 1], "a bit fiddly")`) when a
+    test asserts what gets stored, or with none for the defaults when the survey
+    is incidental. Handed out as a fixture so tests share one `StubAsker` without
+    importing it across modules (`tests` is not an importable package).
+    """
+    return StubAsker
 
 
 @pytest.fixture(autouse=True)

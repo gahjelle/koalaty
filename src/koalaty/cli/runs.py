@@ -10,6 +10,7 @@ import would defeat the test isolation that monkeypatches `config` (ADR-0010).
 The `TaskParam` validator on `run`/`start` rejects unknown tasks at parse time.
 """
 
+from koalaty import survey
 from koalaty.cli import HarnessParam, ModelParam, TaskParam
 from koalaty.config import config
 from koalaty.console import stderr
@@ -66,10 +67,13 @@ def harvest(
 ) -> str:
     """Harvest a pending manual run's externally-supplied session into a result.
 
-    Delegates to harvest_manual, which writes result.json and removes pending.json,
-    then returns the completed run id. Errors if the run id is unknown or has
-    already been harvested. `--joey`/`--no-joey` sets or clears the throwaway flag;
-    left off, the pending run's value carries through.
+    Wires the interactive survey asker (read at call time so tests can stub it),
+    delegates to harvest_manual, which runs the survey, writes result.json and
+    removes pending.json, then returns the completed run id. Errors if the run id
+    is unknown or has already been harvested. `--joey`/`--no-joey` sets or clears
+    the throwaway flag; left off, the pending run's value carries through.
     """
-    result = harvest_manual(run_id, session, config.pouch, joey=joey)
+    result = harvest_manual(
+        run_id, session, config.pouch, ask=survey.make_asker(), joey=joey
+    )
     return result.run_id
