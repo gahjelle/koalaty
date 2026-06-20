@@ -1,24 +1,24 @@
 """Domain exceptions: shared base class and specific error types.
 
-All custom exceptions inherit `KoalaError` so the CLI top-level handler can
+All custom exceptions inherit `KoalatyError` so the CLI top-level handler can
 catch domain errors uniformly while still allowing specific catches.
 """
 
 
-class KoalaError(Exception):
+class KoalatyError(Exception):
     """Base class for all koalaty domain exceptions."""
 
 
-class TaskLoadError(KoalaError):
+class TaskLoadError(KoalatyError):
     """A task bundle is missing, malformed, or fails validation."""
 
 
-class TaskScaffoldError(KoalaError):
+class TaskScaffoldError(KoalatyError):
     """A task scaffold cannot be written (bad id or a colliding directory)."""
 
 
-class HarvestError(KoalaError):
+class HarvestError(KoalatyError):
     """A manual run cannot be harvested (unknown or already-harvested run id)."""
 
 
-__all__ = ["HarvestError", "KoalaError", "TaskLoadError", "TaskScaffoldError"]
+__all__ = ["HarvestError", "KoalatyError", "TaskLoadError", "TaskScaffoldError"]

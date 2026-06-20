@@ -12,7 +12,7 @@ from cyclopts import App, Parameter
 
 from koalaty.cli import compare, config, runs, task
 from koalaty.console import print_error
-from koalaty.exceptions import KoalaError
+from koalaty.exceptions import KoalatyError
 
 __all__ = ["build_app"]
 
@@ -41,13 +41,13 @@ def build_app() -> App:
     ) -> None:
         """Run the app, turning domain errors into Rich boxes, not tracebacks.
 
-        Catches `KoalaError` only: domain failures get a friendly box and a
+        Catches `KoalatyError` only: domain failures get a friendly box and a
         non-zero exit, while genuine bugs (`KeyError`, `AttributeError`, ...)
         still raise a full traceback so they stay debuggable.
         """
         try:
             app(tokens)
-        except KoalaError as error:
+        except KoalatyError as error:
             print_error(error)
             raise SystemExit(1) from error
 

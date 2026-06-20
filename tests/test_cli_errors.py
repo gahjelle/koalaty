@@ -2,7 +2,7 @@
 
 These drive the app through `build_app().meta(...)` — the real entry point
 `__main__.main()` uses — so they exercise the domain-error catch that turns a
-`KoalaError` into a Rich box instead of a traceback. The pouch/tasks come from
+`KoalatyError` into a Rich box instead of a traceback. The pouch/tasks come from
 `config`, which the autouse `isolate_config` fixture points at a tmp_path.
 """
 
@@ -14,7 +14,7 @@ from koalaty.cli.main import build_app
 def test_domain_error_prints_box_and_exits(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A KoalaError raised in a command body becomes a Rich box, exit code 1."""
+    """A KoalatyError raised in a command body becomes a Rich box, exit code 1."""
     app = build_app()
     with pytest.raises(SystemExit) as excinfo:
         app.meta(["harvest", "wombat-fake-opus48-x", "--session", "s"])
@@ -28,7 +28,7 @@ def test_domain_error_prints_box_and_exits(
 def test_genuine_bug_still_raises_traceback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A non-KoalaError escapes the launcher uncaught, keeping bugs debuggable."""
+    """A non-KoalatyError escapes the launcher uncaught, keeping bugs debuggable."""
 
     def boom(*_args: object, **_kwargs: object) -> object:
         msg = "a genuine bug"

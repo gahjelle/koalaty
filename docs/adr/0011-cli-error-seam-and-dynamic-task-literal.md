@@ -18,14 +18,14 @@ it one level out, at an execution seam: `build_app()` registers an
 def launcher(*tokens):
     try:
         app(tokens)
-    except KoalaError as error:
+    except KoalatyError as error:
         print_error(error)        # Rich box, mimics cyclopts' panel
         raise SystemExit(1) from error
 ```
 
 `__main__.main()` calls `build_app().meta()` instead of `build_app()()`.
 
-- **Catch `KoalaError` only.** Every domain error subclasses it, so domain
+- **Catch `KoalatyError` only.** Every domain error subclasses it, so domain
   failures get a friendly box and a non-zero exit. Genuine bugs (`KeyError`,
   `AttributeError`, …) are *not* caught and still raise a full traceback, so they
   stay debuggable.
