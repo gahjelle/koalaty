@@ -1,6 +1,7 @@
 """End-to-end tests of bundled example tasks: copying them and listing them."""
 
 import tomllib
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -9,8 +10,6 @@ from koalaty.exceptions import TaskScaffoldError
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from cyclopts import App
 
 
@@ -43,13 +42,13 @@ def test_from_example_defaults_id_to_example_name(app: App, tmp_path: Path) -> N
 def test_from_example_explicit_id_copies_into_that_id(app: App, tmp_path: Path) -> None:
     """`task new <id> --from-example <name>` copies into `tasks/<id>/`."""
     tasks = tmp_path / "tasks"
-    app(["task", "new", "my-quokka", "--from-example", "quokka", "--tasks", str(tasks)])
+    app(["task", "new", "greeter", "--from-example", "quokka", "--tasks", str(tasks)])
 
-    assert (tasks / "my-quokka" / "prompt.md").is_file()
+    assert (tasks / "greeter" / "prompt.md").is_file()
     assert not (tasks / "quokka").exists()
     # The destination id drives the loaded id (and so its default title).
-    loaded = load_task(tasks, "my-quokka")
-    assert loaded.id == "my-quokka"
+    loaded = load_task(tasks, "greeter")
+    assert loaded.id == "greeter"
 
 
 def test_new_without_id_or_example_errors(app: App, tmp_path: Path) -> None:

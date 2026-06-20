@@ -1,5 +1,6 @@
 """Tests for loading and validating on-disk task bundles."""
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -9,8 +10,6 @@ from koalaty.schemas.tasks import Turns
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from tests.conftest import TaskWriter
 
 

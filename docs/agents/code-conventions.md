@@ -40,6 +40,15 @@ rule and how to satisfy it:
 - **KOA005 — homogeneous sequences use `list[T]`, not `tuple[T, ...]`.**
 - **KOA006 — return `Self`, never a string forward-ref to the enclosing class.**
   Import `Self` from `typing` and annotate `-> Self` instead of `-> "Thing"`.
+- **KOA007 — no possessive `my` prefix in code or docs.** An identifier or token
+  beginning with `my` followed by `_` or `-`, or `My` followed by an uppercase
+  letter, models bad naming and leaks into examples shown to users. Pick a name
+  that describes the thing instead. Checked as text across `.py` and `.md` files.
+- **KOA008 — ruff-exempt modules stay at runtime, not in `TYPE_CHECKING`.**
+  `pathlib`, `datetime`, and `typing` are listed in
+  `[tool.ruff.lint.flake8-type-checking] exempt-modules` in `pyproject.toml`, so
+  ruff will never move them into a `TYPE_CHECKING` block. Keep their imports at
+  module top level; do not nest them under `if TYPE_CHECKING:`.
 
 ## Style
 
