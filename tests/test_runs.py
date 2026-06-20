@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from koalaty.adapters.fake import FAKE_SESSION_ID
 from koalaty.exceptions import HarvestError
-from koalaty.runs import harvest_run, run_automated, start_run
+from koalaty.runs import harvest_manual, run_automated, start_manual
 from koalaty.schemas.result import Outcome
 from koalaty.tasks import load_task
 
@@ -73,17 +74,17 @@ def test_run_automated_rejects_interactive_task(
     assert not pouch.exists() or not list(pouch.iterdir())
 
 
-def test_start_run_writes_pending_and_returns_it(
+def test_start_manual_writes_pending_and_returns_it(
     tmp_path: Path,
     make_task: TaskWriter,
 ) -> None:
-    """start_run mints a run id, writes pending.json, and returns it plus setup text."""
+    """start_manual mints a run id, writes pending.json, returns both."""
     pouch = tmp_path / "pouch"
     tasks_dir = make_task(tmp_path / "tasks", "quokka")
     task = load_task(tasks_dir, "quokka")
 
     now = datetime(2026, 6, 18, 14, 0, 0, tzinfo=UTC)
-    pending, instructions = start_run(task, "fake", "opus48", pouch, now=now)
+    pending, instructions = start_manual(task, "fake", "opus48", pouch, now=now)
 
     assert pending.task == "quokka"
     assert pending.harness == "fake"
@@ -100,17 +101,17 @@ def test_start_run_writes_pending_and_returns_it(
     assert not (run_dir / "result.json").exists()
 
 
-def test_harvest_run_completes_pending_into_result(
+def test_harvest_manual_completes_pending_into_result(
     tmp_path: Path,
     make_task: TaskWriter,
 ) -> None:
-    """harvest_run writes result.json (driver=human) and removes pending.json."""
+    """harvest_manual writes result.json (driver=human) and removes pending.json."""
     pouch = tmp_path / "pouch"
     tasks_dir = make_task(tmp_path / "tasks", "quokka", tags=["drop-bear"])
     task = load_task(tasks_dir, "quokka")
 
-    pending, _ = start_run(task, "fake", "opus48", pouch)
-    result = harvest_run(pending.run_id, "session-xyz", pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
 
     assert result.run_id == pending.run_id
     assert result.task == "quokka"
@@ -127,17 +128,17 @@ def test_harvest_run_completes_pending_into_result(
     assert not (run_dir / "pending.json").exists()
 
 
-def test_harvest_run_rejects_unknown_run_id(tmp_path: Path) -> None:
+def test_harvest_manual_rejects_unknown_run_id(tmp_path: Path) -> None:
     """Harvesting an unknown run id errors and writes nothing."""
     pouch = tmp_path / "pouch"
 
     with pytest.raises(HarvestError, match="quokka-fake-opus48-x"):
-        harvest_run("quokka-fake-opus48-x", "session-xyz", pouch)
+        harvest_manual("quokka-fake-opus48-x", FAKE_SESSION_ID, pouch)
 
     assert not pouch.exists() or not list(pouch.iterdir())
 
 
-def test_harvest_run_rejects_already_harvested_run(
+def test_harvest_manual_rejects_already_harvested_run(
     tmp_path: Path,
     make_task: TaskWriter,
 ) -> None:
@@ -146,8 +147,22 @@ def test_harvest_run_rejects_already_harvested_run(
     tasks_dir = make_task(tmp_path / "tasks", "quokka")
     task = load_task(tasks_dir, "quokka")
 
-    pending, _ = start_run(task, "fake", "opus48", pouch)
-    harvest_run(pending.run_id, "session-xyz", pouch)
+    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
 
     with pytest.raises(HarvestError, match=pending.run_id):
-        harvest_run(pending.run_id, "session-xyz", pouch)
+        harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch)
+
+
+def test_harvest_manual_rejects_unknown_session_id(
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Harvesting with a session id the adapter doesn't recognize errors."""
+    pouch = tmp_path / "pouch"
+    tasks_dir = make_task(tmp_path / "tasks", "quokka")
+    task = load_task(tasks_dir, "quokka")
+
+    pending, _ = start_manual(task, "fake", "opus48", pouch)
+    with pytest.raises(ValueError, match="bogus-session-id"):
+        harvest_manual(pending.run_id, "bogus-session-id", pouch)

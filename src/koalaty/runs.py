@@ -15,7 +15,7 @@ from koalaty.schemas.pending import PendingRun
 from koalaty.schemas.result import Result
 from koalaty.schemas.tasks import Task, Turns
 
-__all__ = ["derive_driver", "harvest_run", "run_automated", "start_run"]
+__all__ = ["harvest_manual", "run_automated", "start_manual"]
 
 
 def require_adapter(harness: str) -> Adapter:
@@ -26,17 +26,6 @@ def require_adapter(harness: str) -> Adapter:
         msg = f"unknown harness {harness!r}; registered harnesses: {known}"
         raise ValueError(msg)
     return adapter
-
-
-def derive_driver(*, can_invoke: bool, interactive: bool) -> str:
-    """Derive who steers a session: `koalaty` (automated) or `human`.
-
-    A run is human-driven when the task needs interactive judgment or the
-    harness has no headless `invoke`; otherwise koalaty drives it.
-    """
-    if interactive or not can_invoke:
-        return "human"
-    return "koalaty"
 
 
 def run_automated(
@@ -91,7 +80,7 @@ def run_automated(
     return result
 
 
-def start_run(
+def start_manual(
     task: Task,
     harness: str,
     model: str,
@@ -99,7 +88,7 @@ def start_run(
     *,
     now: datetime | None = None,
 ) -> tuple[PendingRun, str]:
-    """Start a manual run: mint an id, write `pending.json`, return setup text.
+    """Start a manual run: mint an id, write `pending.json`, return setup instructions.
 
     Asks the adapter for harness-specific setup instructions but never invokes
     the harness — a human drives the session by hand (see ADR-0009). The run's
@@ -128,7 +117,7 @@ def start_run(
     return pending, instructions
 
 
-def harvest_run(run_id: str, session_id: str, pouch_dir: Path) -> Result:
+def harvest_manual(run_id: str, session_id: str, pouch_dir: Path) -> Result:
     """Complete a pending manual run by harvesting its externally-supplied session.
 
     Loads the pending run, hands `session_id` to the adapter, assembles the

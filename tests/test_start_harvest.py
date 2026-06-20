@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from koalaty.adapters.fake import FAKE_SESSION_ID
+
 if TYPE_CHECKING:
     from cyclopts import App
     from tests.conftest import TaskWriter
@@ -100,7 +102,9 @@ def test_harvest_completes_pending_run(
     tasks = make_task(tmp_path / "tasks", "quokka")
     run_id = app(start_args(pouch, tasks))
 
-    harvested = app(["harvest", run_id, "--session", "abc123", "--pouch", str(pouch)])
+    harvested = app(
+        ["harvest", run_id, "--session", FAKE_SESSION_ID, "--pouch", str(pouch)]
+    )
 
     assert harvested == run_id
     run_dir = pouch / run_id
@@ -121,7 +125,7 @@ def test_harvested_run_shows_up_in_compare(
     pouch = tmp_path / "pouch"
     tasks = make_task(tmp_path / "tasks", "quokka")
     run_id = app(start_args(pouch, tasks))
-    app(["harvest", run_id, "--session", "abc123", "--pouch", str(pouch)])
+    app(["harvest", run_id, "--session", FAKE_SESSION_ID, "--pouch", str(pouch)])
 
     app(["compare", "--pouch", str(pouch)])
     captured = capsys.readouterr()

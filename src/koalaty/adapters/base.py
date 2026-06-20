@@ -15,10 +15,10 @@ class Adapter(Protocol):
     """The per-harness interface koalaty drives.
 
     Every adapter must support `start` and `harvest`, so every harness is
-    manually drivable. Adapters that can also start a headless session
+    manually drivable. Adapters that can also launch a headless session
     implement `InvocableAdapter` (adding `invoke`); adapters that cannot are
-    manual-only (a human drives the session). An adapter never mints run-ids
-    or knows pouch paths.
+    manual-only (a human drives the session). An adapter never mints run-ids or
+    knows pouch paths.
     """
 
     name: str
@@ -37,7 +37,7 @@ class Adapter(Protocol):
 
 @runtime_checkable
 class InvocableAdapter(Adapter, Protocol):
-    """An adapter that can start a headless session via `invoke`.
+    """An adapter that can launch a headless session via `invoke`.
 
     `isinstance(adapter, InvocableAdapter)` is the type-safe way to check
     whether a harness supports automated invocation.

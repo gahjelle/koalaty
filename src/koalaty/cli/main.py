@@ -18,7 +18,7 @@ from koalaty.config import config
 from koalaty.console import stderr, stdout
 from koalaty.examples import copy_example, list_examples
 from koalaty.exceptions import TaskScaffoldError
-from koalaty.runs import harvest_run, run_automated, start_run
+from koalaty.runs import harvest_manual, run_automated, start_manual
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
@@ -90,12 +90,12 @@ def start(
 ) -> str:
     """Start a manual run: write a pending run and print setup instructions.
 
-    Loads the task, delegates to start_run (which never invokes the harness),
+    Loads the task, delegates to start_manual (which never invokes the harness),
     prints the harness-specific setup instructions to stderr, and returns the
     new run id on stdout.
     """
     loaded = load_task(tasks_dir, task)
-    pending, instructions = start_run(loaded, harness, model, pouch_dir)
+    pending, instructions = start_manual(loaded, harness, model, pouch_dir)
     stderr.print(instructions)
     return pending.run_id
 
@@ -108,11 +108,11 @@ def harvest(
 ) -> str:
     """Harvest a pending manual run's externally-supplied session into a result.
 
-    Delegates to harvest_run, which writes result.json and removes pending.json,
+    Delegates to harvest_manual, which writes result.json and removes pending.json,
     then returns the completed run id. Errors if the run id is unknown or has
     already been harvested.
     """
-    result = harvest_run(run_id, session, pouch_dir)
+    result = harvest_manual(run_id, session, pouch_dir)
     return result.run_id
 
 
@@ -176,7 +176,7 @@ def show_config(
 
 
 def build_app() -> App:
-    """Build the cyclopts application with the run, compare, and task commands."""
+    """Build the cyclopts application with all registered commands."""
     app = App(
         name="koalaty",
         help="Evaluate and compare models inside agent harnesses.",
