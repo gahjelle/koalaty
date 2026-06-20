@@ -11,7 +11,7 @@ tasks = "tasks"
 
 # Task-bundle filenames + parsing rules; scaffold-write and task-load agree here.
 [task]
-config_file = "task.toml"
+task_file = "task.toml"
 prompt_file = "prompt.md"
 done_file = "done.md"
 rubric_file = "rubric.md"

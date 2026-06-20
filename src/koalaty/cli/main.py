@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 from typing import Annotated
 
+from configaroo import print_configuration
 from cyclopts import App, Parameter
 from rich.console import Console
 
@@ -19,7 +20,7 @@ from koalaty.runs import run_automated
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run", "task_new"]
+__all__ = ["build_app", "compare", "run", "show_config", "task_new"]
 
 MODEL_PATTERN = re.compile(config.model.name_pattern)
 
@@ -100,6 +101,14 @@ def task_new(
     return scaffold_task(tasks_dir, task)
 
 
+def show_config(
+    *,
+    section: str | None = None,
+) -> None:
+    """Print the current configuration registry to the console."""
+    print_configuration(config, section)
+
+
 def build_app() -> App:
     """Build the cyclopts application with the run, compare, and task commands."""
     app = App(
@@ -108,6 +117,7 @@ def build_app() -> App:
     )
     app.command(run)
     app.command(compare)
+    app.command(show_config)
 
     task_app = App(name="task", help="Author and scaffold task bundles.")
     task_app.command(task_new, name="new")

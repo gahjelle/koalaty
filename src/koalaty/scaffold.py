@@ -59,7 +59,7 @@ def scaffold_task(tasks_dir: Path, task_id: str) -> Path:
 
     (task_dir / "gum").mkdir(parents=True)
     (task_dir / "tests").mkdir()
-    (task_dir / config.task.config_file).write_text(TASK_TOML, encoding="utf-8")
+    (task_dir / config.task.task_file).write_text(TASK_TOML, encoding="utf-8")
     (task_dir / config.task.prompt_file).write_text(PROMPT_MD, encoding="utf-8")
     (task_dir / config.task.done_file).write_text(DONE_MD, encoding="utf-8")
     (task_dir / config.task.rubric_file).write_text(RUBRIC_MD, encoding="utf-8")

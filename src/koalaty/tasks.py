@@ -86,20 +86,20 @@ def load_task(tasks_dir: Path, task_id: str) -> Task:
         msg = f"no task {task_id!r} found in {tasks_dir}"
         raise TaskLoadError(msg)
 
-    config_file = config.task.config_file
-    config_path = require(task_dir, config_file)
+    task_file = config.task.task_file
+    config_path = require(task_dir, task_file)
     prompt_path = require(task_dir, config.task.prompt_file)
 
     try:
         raw_config = tomllib.loads(config_path.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
-        msg = f"task {task_id!r} has invalid {config_file}: {error}"
+        msg = f"task {task_id!r} has invalid {task_file}: {error}"
         raise TaskLoadError(msg) from error
 
     try:
         task_config = TaskConfig.model_validate(raw_config)
     except ValidationError as error:
-        msg = f"task {task_id!r} has invalid {config_file}: {error}"
+        msg = f"task {task_id!r} has invalid {task_file}: {error}"
         raise TaskLoadError(msg) from error
 
     prompts = split_prompt(prompt_path.read_text(encoding="utf-8"), task_config.turns)

@@ -9,7 +9,7 @@ pydantic model exposed as a module-global singleton (`from koalaty.config import
 config`). This grew out of issue #22, where `scaffold.py` reached into
 `tasks.py` for non-`__all__` constants: rather than re-home a few constants, we
 gave every value a single home so cross-module literals are read from `config`
-(`config.task.config_file`) instead of imported across modules.
+(`config.task.task_file`) instead of imported across modules.
 
 The registry has **two layers with different override rules**. *Settings*
 (`pouch`, `tasks`) are top-level keys that may be overridden, with precedence

@@ -15,7 +15,7 @@ __all__ = ["Config", "ModelRules", "ResultLayout", "RunId", "TaskFiles"]
 class TaskFiles(FrozenModel):
     """Task-bundle invariants that scaffold-write and task-load must agree on."""
 
-    config_file: str
+    task_file: str
     prompt_file: str
     done_file: str
     rubric_file: str
