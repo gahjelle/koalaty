@@ -51,6 +51,56 @@ def test_from_example_explicit_id_copies_into_that_id(app: App, tmp_path: Path) 
     assert loaded.id == "greeter"
 
 
+def test_from_example_title_defaults_from_id_when_toml_omits_it(
+    app: App,
+    tmp_path: Path,
+) -> None:
+    """A copied task whose `task.toml` lacks `title` defaults it from the id."""
+    tasks = tmp_path / "tasks"
+    app(["task", "new", "--from-example", "quokka", "--tasks", str(tasks)])
+
+    toml = tasks / "quokka" / "task.toml"
+    raw = tomllib.loads(toml.read_text(encoding="utf-8"))
+    del raw["title"]
+    lines = [
+        f'turns = "{raw["turns"]}"',
+        "tags = []",
+        f'description = "{raw["description"]}"',
+        "",
+        "[gum]",
+        f'type = "{raw["gum"]["type"]}"',
+    ]
+    toml.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    loaded = load_task(tasks, "quokka")
+    assert loaded.title == "Quokka"
+
+
+def test_from_example_title_defaults_from_explicit_id_when_toml_omits_it(
+    app: App,
+    tmp_path: Path,
+) -> None:
+    """`task new <id> --from-example <name>` defaults title from <id>, not <name>."""
+    tasks = tmp_path / "tasks"
+    app(["task", "new", "greeter", "--from-example", "quokka", "--tasks", str(tasks)])
+
+    toml = tasks / "greeter" / "task.toml"
+    raw = tomllib.loads(toml.read_text(encoding="utf-8"))
+    del raw["title"]
+    lines = [
+        f'turns = "{raw["turns"]}"',
+        "tags = []",
+        f'description = "{raw["description"]}"',
+        "",
+        "[gum]",
+        f'type = "{raw["gum"]["type"]}"',
+    ]
+    toml.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    loaded = load_task(tasks, "greeter")
+    assert loaded.title == "Greeter"
+
+
 def test_new_without_id_or_example_errors(app: App, tmp_path: Path) -> None:
     """`task new` with neither an id nor --from-example is an error."""
     tasks = tmp_path / "tasks"
