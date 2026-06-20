@@ -22,18 +22,18 @@ if TYPE_CHECKING:
 
 
 def test_survey_accepts_in_range_ratings() -> None:
-    """A survey with 1-5 ratings and notes is accepted."""
-    survey = Survey(friction=1, hand_holding=3, frustration=5, notes="went fine")
+    """A survey with 0-5 ratings and notes is accepted."""
+    survey = Survey(friction=0, hand_holding=3, frustration=5, notes="went fine")
 
-    assert survey.friction == 1
+    assert survey.friction == 0
     assert survey.hand_holding == 3
     assert survey.frustration == 5
     assert survey.notes == "went fine"
 
 
-@pytest.mark.parametrize("rating", [0, 6, -1])
+@pytest.mark.parametrize("rating", [-1, 6])
 def test_survey_rejects_out_of_range_ratings(rating: int) -> None:
-    """Ratings outside 1-5 are rejected."""
+    """Ratings outside 0-5 are rejected."""
     with pytest.raises(ValidationError):
         Survey(friction=rating, hand_holding=3, frustration=2, notes="")
 
@@ -74,8 +74,8 @@ def test_harvest_stores_survey_on_result(
 def test_rich_asker_rating_reprompts_until_in_range(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The interactive rating prompt re-asks until the driver enters a 1-5 value."""
-    monkeypatch.setattr("sys.stdin", io.StringIO("9\n0\n3\n"))
+    """The interactive rating prompt re-asks until the driver enters a 0-5 value."""
+    monkeypatch.setattr("sys.stdin", io.StringIO("9\n7\n3\n"))
 
     assert RichAsker().rating("rate the friction") == 3
 

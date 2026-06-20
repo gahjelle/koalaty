@@ -15,15 +15,15 @@ __all__ = ["SURVEY_SCHEMA_VERSION", "Rating", "Survey"]
 
 SURVEY_SCHEMA_VERSION = 1
 
-# A survey rating: an integer on the 1 (best) to 5 (worst) scale.
-Rating = Annotated[int, Field(ge=1, le=5)]
+# A survey rating: an integer on the 0 (none) to 5 (a lot) scale.
+Rating = Annotated[int, Field(ge=0, le=5)]
 
 
 class Survey(FrozenModel):
     """First-person feedback from the human driver on how the session felt.
 
     Captured at harvest for manual runs only and stored on the `Result`. The
-    three ratings are 1-5 (out-of-range values are rejected); `notes` is free
+    three ratings are 0-5 (out-of-range values are rejected); `notes` is free
     text. Not part of paws.
     """
 

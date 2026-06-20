@@ -15,17 +15,17 @@ from koalaty.schemas.survey import Survey
 
 __all__ = ["Asker", "RichAsker", "collect_survey", "make_asker"]
 
-# The 1-5 rating choices an interactive asker enforces, mirroring `Survey`'s
+# The 0-5 rating choices an interactive asker enforces, mirroring `Survey`'s
 # `Rating` bound so the prompt re-asks rather than letting the model reject.
-RATING_CHOICES = [str(value) for value in range(1, 6)]
+RATING_CHOICES = [str(value) for value in range(6)]
 
 FRICTION_PROMPT = (
-    "Friction — how much did the harness get in your way? (1 none … 5 a lot)"
+    "Friction — how much did the harness get in your way? (0 none … 5 a lot)"
 )
 HAND_HOLDING_PROMPT = (
-    "Hand-holding — how much did you have to steer the model? (1 none … 5 a lot)"
+    "Hand-holding — how much did you have to steer the model? (0 none … 5 a lot)"
 )
-FRUSTRATION_PROMPT = "Frustration — how frustrating was the session? (1 none … 5 a lot)"
+FRUSTRATION_PROMPT = "Frustration — how frustrating was the session? (0 none … 5 a lot)"
 NOTES_PROMPT = "Notes — anything else about how the session felt?"
 
 
@@ -46,7 +46,7 @@ class Asker(Protocol):
 def collect_survey(asker: Asker) -> Survey:
     """Assemble a `Survey` by putting the question set to `asker` in order.
 
-    The three ratings are validated to 1-5 by the `Survey` model; an
+    The three ratings are validated to 0-5 by the `Survey` model; an
     interactive asker also re-prompts so out-of-range input never reaches here.
     """
     return Survey(
@@ -61,12 +61,12 @@ class RichAsker:
     """An `Asker` that prompts the driver interactively via Rich.
 
     Prompts go to the shared `stderr` console so the harvested run id stays the
-    only thing on stdout (ADR-0007). `rating` constrains input to 1-5 and re-asks
+    only thing on stdout (ADR-0007). `rating` constrains input to 0-5 and re-asks
     on anything else; `text` accepts free text and defaults to empty.
     """
 
     def rating(self, prompt: str) -> int:
-        """Prompt for a 1-5 rating, re-asking until the driver gives one."""
+        """Prompt for a 0-5 rating, re-asking until the driver gives one."""
         return IntPrompt.ask(prompt, console=stderr, choices=RATING_CHOICES)
 
     def text(self, prompt: str) -> str:
