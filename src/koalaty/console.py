@@ -12,8 +12,21 @@ singletons still honor pytest's `capsys`. See ADR-0007.
 """
 
 from rich.console import Console
+from rich.panel import Panel
 
-__all__ = ["stderr", "stdout"]
+__all__ = ["print_error", "stderr", "stdout"]
 
 stdout = Console()
 stderr = Console(stderr=True)
+
+
+def print_error(error: Exception) -> None:
+    """Print a domain error in a red `Error` panel on stderr.
+
+    Mimics the red box cyclopts renders for parse-stage errors, so a domain
+    error caught at the execution seam (the CLI meta launcher) looks identical
+    to a parse error rather than dumping a raw traceback.
+    """
+    stderr.print(
+        Panel(str(error), title="Error", title_align="left", border_style="red"),
+    )
