@@ -1,7 +1,10 @@
 """End-to-end tests of the `run` command driving the fake adapter."""
 
 import json
+import os
 import re
+import subprocess
+import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -206,15 +209,38 @@ def test_run_rejects_interactive_task(
 
 
 def test_pouch_env_var_overrides_default(
-    app: App,
     tmp_path: Path,
     make_task: TaskWriter,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """KOALATY_POUCH and KOALATY_TASKS are used when options are omitted."""
+    """KOALATY_POUCH / KOALATY_TASKS steer a run when the options are omitted.
+
+    configaroo resolves the env into `config` at import, so this runs the CLI in
+    a fresh process (the env can't be injected after import) and checks that the
+    result lands under the env-provided pouch.
+    """
     pouch = tmp_path / "pouch"
-    make_task(tmp_path / "tasks", "quokka")
-    monkeypatch.setenv("KOALATY_POUCH", str(pouch))
-    monkeypatch.setenv("KOALATY_TASKS", str(tmp_path / "tasks"))
-    run_id = app(["run", "quokka", "--harness", "fake", "--model", "opus48"])
-    assert (pouch / run_id / "result.json").exists()
+    tasks = make_task(tmp_path / "tasks", "quokka")
+    env = {
+        **os.environ,
+        "KOALATY_POUCH": str(pouch),
+        "KOALATY_TASKS": str(tasks),
+    }
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "koalaty",
+            "run",
+            "quokka",
+            "--harness",
+            "fake",
+            "--model",
+            "opus48",
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert list(pouch.glob("quokka-fake-opus48-*/result.json"))

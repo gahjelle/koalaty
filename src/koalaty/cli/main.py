@@ -8,20 +8,21 @@ import re
 from pathlib import Path
 from typing import Annotated
 
+from configaroo import print_configuration
 from cyclopts import App, Parameter
 from rich.console import Console
 
 from koalaty import pouch
 from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
-from koalaty.config import DEFAULT_POUCH, DEFAULT_TASKS, POUCH_ENV
+from koalaty.config import config
 from koalaty.runs import run_automated
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run", "task_new"]
+__all__ = ["build_app", "compare", "run", "show_config", "task_new"]
 
-MODEL_PATTERN = re.compile(r"^[a-z0-9]+$")
+MODEL_PATTERN = re.compile(config.model.name_pattern)
 
 PouchOption = Annotated[
     Path,
@@ -55,8 +56,8 @@ def run(
     *,
     harness: Annotated[str, Parameter(validator=validate_harness)],
     model: Annotated[str, Parameter(validator=validate_model)],
-    pouch_dir: PouchOption = DEFAULT_POUCH,
-    tasks_dir: TasksOption = DEFAULT_TASKS,
+    pouch_dir: PouchOption = config.pouch,
+    tasks_dir: TasksOption = config.tasks,
 ) -> str:
     """Run a task on a model in a harness and store the result in the pouch.
 
@@ -71,7 +72,7 @@ def run(
 def compare(
     task: str | None = None,
     *,
-    pouch_dir: PouchOption = DEFAULT_POUCH,
+    pouch_dir: PouchOption = config.pouch,
 ) -> None:
     """Print a (task x model) grid per harness of the results in the pouch."""
     console = Console()
@@ -90,7 +91,7 @@ def compare(
 def task_new(
     task: str,
     *,
-    tasks_dir: TasksOption = DEFAULT_TASKS,
+    tasks_dir: TasksOption = config.tasks,
 ) -> Path:
     """Scaffold a new task directory that loads and runs unedited.
 
@@ -100,15 +101,23 @@ def task_new(
     return scaffold_task(tasks_dir, task)
 
 
+def show_config(
+    *,
+    section: str | None = None,
+) -> None:
+    """Print the current configuration registry to the console."""
+    print_configuration(config, section)
+
+
 def build_app() -> App:
     """Build the cyclopts application with the run, compare, and task commands."""
     app = App(
         name="koalaty",
         help="Evaluate and compare models inside agent harnesses.",
-        config=POUCH_ENV,
     )
     app.command(run)
     app.command(compare)
+    app.command(show_config)
 
     task_app = App(name="task", help="Author and scaffold task bundles.")
     task_app.command(task_new, name="new")

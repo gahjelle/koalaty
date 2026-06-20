@@ -42,6 +42,10 @@ _Avoid_: instruction, query
 A real, ordinary task bundled with koalaty for onboarding, copied into the user's `tasks/` as a starting point. Running one produces a real result — an example task is *not* a **joey**.
 _Avoid_: sample, demo, template
 
+**task config**:
+A **task**'s own authored settings (`task.toml`): its `turns`, `tags`, `gum`, and friends. Part of the task bundle. Distinct from koalaty's own **configuration** (the packaged `koalaty.toml` registry of settings + invariants, see [ADR-0006](docs/adr/0006-configuration-via-configaroo.md)) — reserve bare "config"/"configuration" for the latter.
+_Avoid_: config (use that for koalaty's own settings)
+
 **drop-bear**:
 A **task** tag marking an adversarial / red-team task — about *what was asked*. Lets comparisons filter to adversarial tasks.
 _Avoid_: adversarial (use the tag), red-team

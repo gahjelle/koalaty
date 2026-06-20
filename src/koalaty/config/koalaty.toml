@@ -1,0 +1,34 @@
+# koalaty's configuration registry. See ADR-0006.
+#
+# Settings (top-level) are overridable: --flag > KOALATY_* env > this default.
+# Invariants (the [sections] below) are fixed contracts, never overridable.
+
+# Settings -------------------------------------------------------------------
+pouch = "pouch"
+tasks = "tasks"
+
+# Invariants -----------------------------------------------------------------
+
+# Task-bundle filenames + parsing rules; scaffold-write and task-load agree here.
+[task]
+task_file = "task.toml"
+prompt_file = "prompt.md"
+done_file = "done.md"
+rubric_file = "rubric.md"
+id_pattern = "^[a-z0-9]+(-[a-z0-9]+)*$"
+turn_separator = "---"
+min_scripted_turns = 2
+
+# A model's canonical name (a-z, 0-9; no dashes).
+[model]
+name_pattern = "^[a-z0-9]+$"
+
+# Filenames a run writes into its pouch directory.
+[result]
+result_file = "result.json"
+raw_session_file = "raw/session.json"
+
+# Values shaping a minted run id; its structure stays an f-string in code.
+[run_id]
+date_format = "%Y%m%d"
+shortid_length = 6
