@@ -19,4 +19,5 @@ pouch/<run-id>/
 
 - A pending run and a completed run share the same run-id directory; `harvest` is an in-place completion (write `result.json`, delete `pending.json`).
 - `harvest` on a run id with no `pending.json` (unknown, or already harvested) is an error that writes nothing.
+- If `harvest` fails before writing `result.json` (e.g., the adapter rejects the session id), `pending.json` remains in place. The run is still harvestable with a valid session id — this is intentional recovery: only a successful harvest completes the run.
 - This is the pouch's on-disk contract (the pouch is the product, ADR-0001; files are the source of truth, ADR-0002), so it is deliberately recorded here.

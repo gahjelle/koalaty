@@ -18,7 +18,7 @@ FAKE_SESSION_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 
 class FakeAdapter:
-    """An adapter that fabricates sessions in memory, walking invoke → harvest.
+    """Fabricate sessions in memory via invoke → harvest or start → harvest.
 
     Real adapters slot in unchanged: `invoke` returns a session id that
     `harvest` later resolves, exactly as a real harness round-trip would. The

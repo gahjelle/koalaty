@@ -11,7 +11,7 @@ We chose this over keeping orchestration in the CLI (the status quo) for two rea
 
 The module is named `runs` (not `orchestrator` or `runner`) because it houses all run workflows: `run_automated` today, `start` and `harvest` for manual runs later. Both workflows share the same harvest → assemble → write suffix, which is a private helper inside the module. Splitting automated and manual runs into separate modules would duplicate that suffix or require a third shared module — one module keeps the shared logic local.
 
-`run_automated` accepts a loaded `Task` object (not a task-id string plus tasks directory) because task loading is already a distinct concern in `tasks.py`. An optional `now` parameter accepts a `datetime` for deterministic testing. The driver is the literal string `"koalaty"` rather than a call to `derive_driver`, since an automated run is always self-driven.
+`run_automated` accepts a loaded `Task` object (not a task-id string plus tasks directory) because task loading is already a distinct concern in `tasks.py`. An optional `now` parameter accepts a `datetime` for deterministic testing. The driver is the literal string `"koalaty"` (an automated run is always self-driven); `start_manual` records `driver="human"` symmetrically.
 
 ## Consequences
 
