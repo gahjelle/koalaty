@@ -17,4 +17,8 @@ class TaskScaffoldError(KoalaError):
     """A task scaffold cannot be written (bad id or a colliding directory)."""
 
 
-__all__ = ["KoalaError", "TaskLoadError", "TaskScaffoldError"]
+class HarvestError(KoalaError):
+    """A manual run cannot be harvested (unknown or already-harvested run id)."""
+
+
+__all__ = ["HarvestError", "KoalaError", "TaskLoadError", "TaskScaffoldError"]

@@ -18,11 +18,20 @@ from koalaty.config import config
 from koalaty.console import stderr, stdout
 from koalaty.examples import copy_example, list_examples
 from koalaty.exceptions import TaskScaffoldError
-from koalaty.runs import run_automated
+from koalaty.runs import harvest_run, run_automated, start_run
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run", "show_config", "task_examples", "task_new"]
+__all__ = [
+    "build_app",
+    "compare",
+    "harvest",
+    "run",
+    "show_config",
+    "start",
+    "task_examples",
+    "task_new",
+]
 
 MODEL_PATTERN = re.compile(config.model.name_pattern)
 
@@ -68,6 +77,42 @@ def run(
     """
     loaded = load_task(tasks_dir, task)
     result = run_automated(loaded, harness, model, pouch_dir)
+    return result.run_id
+
+
+def start(
+    task: str,
+    *,
+    harness: Annotated[str, Parameter(validator=validate_harness)],
+    model: Annotated[str, Parameter(validator=validate_model)],
+    pouch_dir: PouchOption = config.pouch,
+    tasks_dir: TasksOption = config.tasks,
+) -> str:
+    """Start a manual run: write a pending run and print setup instructions.
+
+    Loads the task, delegates to start_run (which never invokes the harness),
+    prints the harness-specific setup instructions to stderr, and returns the
+    new run id on stdout.
+    """
+    loaded = load_task(tasks_dir, task)
+    pending, instructions = start_run(loaded, harness, model, pouch_dir)
+    stderr.print(instructions)
+    return pending.run_id
+
+
+def harvest(
+    run_id: str,
+    *,
+    session: str,
+    pouch_dir: PouchOption = config.pouch,
+) -> str:
+    """Harvest a pending manual run's externally-supplied session into a result.
+
+    Delegates to harvest_run, which writes result.json and removes pending.json,
+    then returns the completed run id. Errors if the run id is unknown or has
+    already been harvested.
+    """
+    result = harvest_run(run_id, session, pouch_dir)
     return result.run_id
 
 
@@ -137,6 +182,8 @@ def build_app() -> App:
         help="Evaluate and compare models inside agent harnesses.",
     )
     app.command(run)
+    app.command(start)
+    app.command(harvest)
     app.command(compare)
     app.command(show_config)
 

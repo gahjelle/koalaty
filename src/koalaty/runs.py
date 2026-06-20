@@ -10,11 +10,22 @@ from pathlib import Path
 
 from koalaty import pouch
 from koalaty.adapters import get_adapter, known_harnesses
-from koalaty.adapters.base import InvocableAdapter
+from koalaty.adapters.base import Adapter, InvocableAdapter
+from koalaty.schemas.pending import PendingRun
 from koalaty.schemas.result import Result
 from koalaty.schemas.tasks import Task, Turns
 
-__all__ = ["derive_driver", "run_automated"]
+__all__ = ["derive_driver", "harvest_run", "run_automated", "start_run"]
+
+
+def require_adapter(harness: str) -> Adapter:
+    """Return the registered adapter for `harness`, or raise a friendly error."""
+    adapter = get_adapter(harness)
+    if adapter is None:
+        known = ", ".join(known_harnesses())
+        msg = f"unknown harness {harness!r}; registered harnesses: {known}"
+        raise ValueError(msg)
+    return adapter
 
 
 def derive_driver(*, can_invoke: bool, interactive: bool) -> str:
@@ -43,11 +54,7 @@ def run_automated(
     assembles the Result, and writes its run directory. Nothing is written on
     any rejection.
     """
-    adapter = get_adapter(harness)
-    if adapter is None:
-        known = ", ".join(known_harnesses())
-        msg = f"unknown harness {harness!r}; registered harnesses: {known}"
-        raise ValueError(msg)
+    adapter = require_adapter(harness)
 
     if not isinstance(adapter, InvocableAdapter):
         msg = f"harness {harness!r} does not support headless invocation"
@@ -80,5 +87,74 @@ def run_automated(
         turns=task.turns,
     )
     pouch.write_run(pouch_dir, result, harvested.raw)
+
+    return result
+
+
+def start_run(
+    task: Task,
+    harness: str,
+    model: str,
+    pouch_dir: Path,
+    *,
+    now: datetime | None = None,
+) -> tuple[PendingRun, str]:
+    """Start a manual run: mint an id, write `pending.json`, return setup text.
+
+    Asks the adapter for harness-specific setup instructions but never invokes
+    the harness — a human drives the session by hand (see ADR-0009). The run's
+    driver is recorded as `human`. `interactive` tasks are accepted. Returns the
+    written `PendingRun` and the instructions to show the human.
+    """
+    adapter = require_adapter(harness)
+
+    started = now or datetime.now(UTC)
+    run_id = pouch.new_run_id(pouch_dir, task.id, harness, model, started)
+
+    instructions = adapter.start(task, model)
+
+    pending = PendingRun(
+        run_id=run_id,
+        task=task.id,
+        harness=harness,
+        model=model,
+        driver="human",
+        turns=task.turns,
+        tags=task.tags,
+        created_at=started,
+    )
+    pouch.write_pending(pouch_dir, pending)
+
+    return pending, instructions
+
+
+def harvest_run(run_id: str, session_id: str, pouch_dir: Path) -> Result:
+    """Complete a pending manual run by harvesting its externally-supplied session.
+
+    Loads the pending run, hands `session_id` to the adapter, assembles the
+    Result (driver `human`, task/harness/model/turns/tags from the pending run),
+    writes its run directory, and removes `pending.json`. An unknown or
+    already-harvested run id raises `HarvestError` and writes nothing.
+    """
+    pending = pouch.read_pending(pouch_dir, run_id)
+    adapter = require_adapter(pending.harness)
+
+    harvested = adapter.harvest(session_id)
+
+    result = Result(
+        run_id=pending.run_id,
+        task=pending.task,
+        harness=pending.harness,
+        model=pending.model,
+        driver="human",
+        started_at=harvested.started_at,
+        finished_at=harvested.finished_at,
+        outcome=harvested.outcome,
+        summary=harvested.summary,
+        tags=pending.tags,
+        turns=pending.turns,
+    )
+    pouch.write_run(pouch_dir, result, harvested.raw)
+    pouch.remove_pending(pouch_dir, run_id)
 
     return result
