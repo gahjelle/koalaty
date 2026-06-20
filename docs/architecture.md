@@ -41,7 +41,8 @@ koalaty compare [filter]   # the comparison report
 
 **Authoring:**
 ```
-koalaty task new <id> [--from-example <name>]   # scaffold a task directory
+koalaty task examples                           # list the bundled example tasks
+koalaty task new [<id>] [--from-example <name>] # scaffold or copy a task directory
 ```
 
 ## Components

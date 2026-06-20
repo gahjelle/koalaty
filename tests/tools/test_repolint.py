@@ -1,8 +1,15 @@
 """Tests for the repo-specific convention linter."""
 
+import tomllib
 from pathlib import Path
 
-from tools.repolint import DEFAULT_PATHS, check_source, fix_source
+from tools.repolint import (
+    DEFAULT_PATHS,
+    EXEMPT_MODULES,
+    check_source,
+    check_text,
+    fix_source,
+)
 
 HERE = Path("sample.py")
 
@@ -11,9 +18,20 @@ def _codes(source: str) -> set[str]:
     return {v.code for v in check_source(source, HERE)}
 
 
+def _text_codes(source: str) -> set[str]:
+    return {v.code for v in check_text(source, HERE)}
+
+
 def test_default_paths_cover_src_and_tests() -> None:
     """The default lint scope covers package sources and tests equally."""
     assert DEFAULT_PATHS == ["src/", "tests/"]
+
+
+def test_exempt_modules_match_pyproject() -> None:
+    """KOA008's module set is loaded from ruff's `exempt-modules`, not hardcoded."""
+    config = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    flake8_tc = config["tool"]["ruff"]["lint"]["flake8-type-checking"]
+    assert frozenset(flake8_tc["exempt-modules"]) == EXEMPT_MODULES
 
 
 def test_clean_source_has_no_violations() -> None:
@@ -89,3 +107,65 @@ def test_fix_removes_future_import_and_single_backticks() -> None:
     assert "from __future__" not in fixed
     assert "``" not in fixed
     assert check_source(fixed, HERE) == []
+
+
+def test_flags_possessive_prefix_with_underscore() -> None:
+    """A `my` + `_` identifier prefix is KOA007."""
+    source = "my" + "_thing = 1\n"
+
+    assert "KOA007" in _text_codes(source)
+
+
+def test_flags_possessive_prefix_with_hyphen() -> None:
+    """A `my` + `-` token prefix is KOA007 (caught in docs too)."""
+    source = "see my" + "-task below\n"
+
+    assert "KOA007" in _text_codes(source)
+
+
+def test_flags_possessive_prefix_pascal_case() -> None:
+    """A `My` + uppercase prefix is KOA007."""
+    source = "class " + "My" + "Thing: ...\n"
+
+    assert "KOA007" in _text_codes(source)
+
+
+def test_allows_standalone_possessive_word() -> None:
+    """The bare word `my` (no separator) is not KOA007."""
+    source = "this is my account\n"
+
+    assert "KOA007" not in _text_codes(source)
+
+
+def test_clean_text_has_no_possessive_prefix() -> None:
+    """Text without the prefix raises nothing."""
+    assert check_text("a plain sentence\n", HERE) == []
+
+
+def test_flags_exempt_module_in_type_checking() -> None:
+    """A pathlib import inside TYPE_CHECKING is KOA008."""
+    source = (
+        "from typing import TYPE_CHECKING\n\n"
+        "if TYPE_CHECKING:\n"
+        "    from pathlib import Path\n"
+    )
+
+    assert "KOA008" in _codes(source)
+
+
+def test_allows_exempt_module_at_runtime() -> None:
+    """A pathlib import at module top level is fine."""
+    source = "from pathlib import Path\n\nx = Path('a')\n"
+
+    assert "KOA008" not in _codes(source)
+
+
+def test_allows_non_exempt_module_in_type_checking() -> None:
+    """A non-exempt module inside TYPE_CHECKING is fine."""
+    source = (
+        "from typing import TYPE_CHECKING\n\n"
+        "if TYPE_CHECKING:\n"
+        "    from collections.abc import Iterator\n"
+    )
+
+    assert "KOA008" not in _codes(source)

@@ -1,6 +1,7 @@
 """End-to-end tests of the `task new` scaffold command."""
 
 import tomllib
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,8 +9,6 @@ import pytest
 from koalaty.exceptions import TaskScaffoldError
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from cyclopts import App
 
 

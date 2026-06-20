@@ -1,0 +1,13 @@
+# turns: turn structure — "one-shot" (one prompt), "scripted" (turns separated
+# by bare `---` lines in prompt.md), or "interactive" (manual-only).
+turns = "one-shot"
+
+# tags: task tags, e.g. "drop-bear" to mark an adversarial / red-team task.
+tags = []
+
+title = "Quokka greeter"
+description = "Implement a one-shot greeter — the canonical round-trip example."
+
+# [gum]: the starting fixture. "inline" keeps files under this task's gum/.
+[gum]
+type = "inline"

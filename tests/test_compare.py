@@ -1,6 +1,7 @@
 """Tests for the comparison grid and the `compare` command."""
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid, render_grid
@@ -8,8 +9,6 @@ from koalaty.schemas.result import Outcome, Result
 from koalaty.schemas.tasks import Turns
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     import pytest
     from cyclopts import App
     from tests.conftest import TaskWriter

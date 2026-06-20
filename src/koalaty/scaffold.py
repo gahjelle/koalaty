@@ -11,7 +11,7 @@ from pathlib import Path
 from koalaty.config import config
 from koalaty.exceptions import TaskScaffoldError
 
-__all__ = ["scaffold_task"]
+__all__ = ["scaffold_task", "validate_destination"]
 
 TASK_ID_RE = re.compile(config.task.id_pattern)
 
@@ -42,11 +42,12 @@ DONE_MD = "TODO: describe when this task is done.\n"
 RUBRIC_MD = "TODO: list the rubric criteria for grading this task.\n"
 
 
-def scaffold_task(tasks_dir: Path, task_id: str) -> Path:
-    """Write a blank task scaffold under `tasks_dir/<task_id>/` and return it.
+def validate_destination(tasks_dir: Path, task_id: str) -> Path:
+    """Validate a new-task destination and return its directory path.
 
-    Rejects an id that breaks the task-id pattern, and refuses to overwrite an
-    existing directory — writing nothing in either case.
+    Shared by the blank scaffold and the example copy so both obey the same
+    rules: reject an id that breaks the task-id pattern, and refuse an existing
+    directory. Creates nothing.
     """
     if not TASK_ID_RE.fullmatch(task_id):
         msg = f"invalid task id {task_id!r}; must match {TASK_ID_RE.pattern}"
@@ -56,6 +57,16 @@ def scaffold_task(tasks_dir: Path, task_id: str) -> Path:
     if task_dir.exists():
         msg = f"task {task_id!r} already exists at {task_dir}; refusing to overwrite"
         raise TaskScaffoldError(msg)
+    return task_dir
+
+
+def scaffold_task(tasks_dir: Path, task_id: str) -> Path:
+    """Write a blank task scaffold under `tasks_dir/<task_id>/` and return it.
+
+    Rejects an id that breaks the task-id pattern, and refuses to overwrite an
+    existing directory — writing nothing in either case.
+    """
+    task_dir = validate_destination(tasks_dir, task_id)
 
     (task_dir / "gum").mkdir(parents=True)
     (task_dir / "tests").mkdir()

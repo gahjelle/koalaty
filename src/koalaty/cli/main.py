@@ -16,11 +16,13 @@ from koalaty import pouch
 from koalaty.adapters import known_harnesses
 from koalaty.compare import build_grid, render_grid
 from koalaty.config import config
+from koalaty.examples import copy_example, list_examples
+from koalaty.exceptions import TaskScaffoldError
 from koalaty.runs import run_automated
 from koalaty.scaffold import scaffold_task
 from koalaty.tasks import load_task
 
-__all__ = ["build_app", "compare", "run", "show_config", "task_new"]
+__all__ = ["build_app", "compare", "run", "show_config", "task_examples", "task_new"]
 
 MODEL_PATTERN = re.compile(config.model.name_pattern)
 
@@ -89,16 +91,37 @@ def compare(
 
 
 def task_new(
-    task: str,
+    task: str | None = None,
     *,
+    from_example: Annotated[
+        str | None,
+        Parameter(name="--from-example", help="Copy a bundled example task by name."),
+    ] = None,
     tasks_dir: TasksOption = config.tasks,
 ) -> Path:
-    """Scaffold a new task directory that loads and runs unedited.
+    """Create a new task directory, blank or copied from a bundled example.
 
-    Writes the full documented layout under `tasks_dir/<task>/` and returns
-    the new directory. Fails without touching disk on a bad id or a collision.
+    With `--from-example <name>`, copies that example into `tasks_dir/<task>/`
+    (defaulting the id to the example's name). Otherwise scaffolds a blank task
+    under `tasks_dir/<task>/`. Requires an id or `--from-example`. Fails without
+    touching disk on a bad id, a collision, or an unknown example.
     """
+    if from_example is not None:
+        return copy_example(tasks_dir, from_example, task)
+    if task is None:
+        msg = "task new needs an id or --from-example <name>"
+        raise TaskScaffoldError(msg)
     return scaffold_task(tasks_dir, task)
+
+
+def task_examples() -> None:
+    """List the bundled example tasks with each one's name and title."""
+    console = Console()
+    for example in list_examples():
+        description = (
+            f" \N{EM DASH} {example.description}" if example.description else ""
+        )
+        console.print(f"{example.id}  {example.title}{description}")
 
 
 def show_config(
@@ -121,5 +144,6 @@ def build_app() -> App:
 
     task_app = App(name="task", help="Author and scaffold task bundles.")
     task_app.command(task_new, name="new")
+    task_app.command(task_examples, name="examples")
     app.command(task_app)
     return app
