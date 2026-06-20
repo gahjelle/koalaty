@@ -1,0 +1,33 @@
+"""CLI command for the comparison grid: `compare`.
+
+Sits alongside `koalaty.compare` (the grid module it delegates to); this is the
+CLI face of the comparison feed.
+"""
+
+from koalaty import pouch
+from koalaty.cli import (
+    PouchOption,  # noqa: TC001 — cyclopts resolves this annotation alias at runtime via get_type_hints
+)
+from koalaty.compare import build_grid, render_grid
+from koalaty.config import config
+from koalaty.console import stderr, stdout
+
+__all__ = ["compare"]
+
+
+def compare(
+    task: str | None = None,
+    *,
+    pouch_dir: PouchOption = config.pouch,
+) -> None:
+    """Print a (task x model) grid per harness of the results in the pouch."""
+    results = pouch.read_results(pouch_dir)
+    if not results:
+        stderr.print(f"no runs found in {pouch_dir}")
+        return
+
+    if task is not None:
+        results = [result for result in results if result.task == task]
+    harnesses = sorted({result.harness for result in results})
+    for harness in harnesses:
+        stdout.print(render_grid(build_grid(results, harness)))

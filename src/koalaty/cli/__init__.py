@@ -1,1 +1,56 @@
-"""Command-line interface package."""
+"""Command-line interface package: shared parameter types and validators.
+
+The per-area command modules (`runs`, `compare`, `task`, `config`) import the
+shared cyclopts parameter types and validators from here; `main` assembles them
+into the application. Keeping the shared CLI vocabulary in one place lets each
+command module stay focused on its own handlers.
+"""
+
+import re
+from pathlib import Path
+from typing import Annotated
+
+from cyclopts import Parameter
+
+from koalaty.adapters import known_harnesses
+from koalaty.config import config
+
+__all__ = [
+    "HarnessParam",
+    "ModelParam",
+    "PouchOption",
+    "TasksOption",
+    "validate_harness",
+    "validate_model",
+]
+
+MODEL_NAME_RE = re.compile(config.model.name_pattern)
+
+
+def validate_harness(_type: type, value: str) -> None:
+    """Reject harnesses without a registered adapter."""
+    if value not in known_harnesses():
+        known = ", ".join(known_harnesses())
+        msg = f"unknown harness {value!r}; registered harnesses: {known}"
+        raise ValueError(msg)
+
+
+def validate_model(_type: type, value: str) -> None:
+    """Reject model names that are not dash-free canonical slugs."""
+    if not MODEL_NAME_RE.fullmatch(value):
+        msg = (
+            f"model {value!r} must match {MODEL_NAME_RE.pattern} (a-z, 0-9; no dashes)"
+        )
+        raise ValueError(msg)
+
+
+type HarnessParam = Annotated[str, Parameter(validator=validate_harness)]
+type ModelParam = Annotated[str, Parameter(validator=validate_model)]
+type PouchOption = Annotated[
+    Path,
+    Parameter(name="--pouch", help="Pouch directory (results store)."),
+]
+type TasksOption = Annotated[
+    Path,
+    Parameter(name="--tasks", help="Tasks directory (task bundles)."),
+]
