@@ -73,16 +73,18 @@ def compare(
     *,
     pouch_dir: PouchOption = DEFAULT_POUCH,
 ) -> None:
-    """Print a (model x harness) grid per task of the results in the pouch."""
+    """Print a (task x model) grid per harness of the results in the pouch."""
     console = Console()
     results = pouch.read_results(pouch_dir)
     if not results:
         console.print(f"no runs found in {pouch_dir}")
         return
 
-    tasks = [task] if task is not None else sorted({result.task for result in results})
-    for task_id in tasks:
-        console.print(render_grid(build_grid(results, task_id)))
+    if task is not None:
+        results = [result for result in results if result.task == task]
+    harnesses = sorted({result.harness for result in results})
+    for harness in harnesses:
+        console.print(render_grid(build_grid(results, harness)))
 
 
 def task_new(

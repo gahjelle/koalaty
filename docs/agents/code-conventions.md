@@ -13,6 +13,7 @@
 - Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this).
 - Full **type annotations** are required on all public APIs (ruff `ANN` rules enforce this).
 - Never blanket-ignore the linter with `# noqa` — fix the issue or use a targeted `# noqa: CODE` with a comment explaining why.
+- For intentional Unicode characters that trigger RUF001 (ambiguous characters), use `\N{name}` escapes (e.g., `\N{EN DASH}`) instead of the literal character or `\u` escapes. This is self-documenting and avoids the noqa entirely.
 
 ## Repo conventions (`repolint`)
 
