@@ -32,16 +32,16 @@ class StubAsker:
         self, ratings: list[int] | None = None, notes: str = "it was fine"
     ) -> None:
         """Answer ratings from `ratings` (in order) and notes with `notes`."""
-        self._ratings = iter(ratings if ratings is not None else [2, 3, 1])
-        self._notes = notes
+        self.ratings = iter(ratings if ratings is not None else [2, 3, 1])
+        self.notes = notes
 
     def rating(self, prompt: str) -> int:  # noqa: ARG002 — prompt unused by the stub
         """Return the next canned rating."""
-        return next(self._ratings)
+        return next(self.ratings)
 
     def text(self, prompt: str) -> str:  # noqa: ARG002 — prompt unused by the stub
         """Return the canned free-text notes."""
-        return self._notes
+        return self.notes
 
 
 @dataclass

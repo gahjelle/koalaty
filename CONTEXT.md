@@ -93,7 +93,7 @@ The subjective track of paws: quality of the output/transcript against shared cr
 _Avoid_: criteria, judge (use for the scorer, not the track)
 
 **survey**:
-First-person feedback from the human **driver** on how the session felt — friction, hand-holding, frustration. Captured at harvest, manual runs only, stored on the **result**. Not part of paws.
+First-person feedback from the human **driver** on how the session felt — friction, hand-holding, frustration, plus free-text notes. Captured at harvest, manual runs only, stored on the **result**. Not part of paws.
 _Avoid_: feedback, questionnaire, review (that's rubric)
 
 **turns**:

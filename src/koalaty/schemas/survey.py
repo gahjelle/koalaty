@@ -1,4 +1,4 @@
-"""Survey schema: the first-person questionnaire stored on a manual result.
+"""Survey schema: the first-person survey stored on a manual result.
 
 The driver answers the survey at harvest (manual runs only); it is stored on
 the `Result` and is null for automated runs. The question set may evolve later
@@ -31,4 +31,4 @@ class Survey(FrozenModel):
     friction: Rating
     hand_holding: Rating
     frustration: Rating
-    notes: str
+    notes: str = ""
