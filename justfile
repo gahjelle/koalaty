@@ -32,3 +32,18 @@ fix:
     uv run ruff check --fix -q
     uv run python -m tools.repolint --fix
     uv run ruff format -q
+
+# Set up tasks and run a few of them
+setup:
+    rm -r tasks/
+    uv run koalaty task new --from-example wombat
+    uv run koalaty task new --from-example quokka
+    uv run koalaty task new bilby
+    uv run koalaty run wombat --harness fake --model faiku
+    uv run koalaty run wombat --harness fake --model faiku
+    uv run koalaty run quokka --harness fake --model faiku
+    uv run koalaty run bilby --harness fake --model faiku
+    uv run koalaty run wombat --harness fake --model fonnet
+    uv run koalaty run bilby --harness fake --model fonnet
+    uv run koalaty run bilby --harness fake --model fonnet
+    uv run koalaty compare
