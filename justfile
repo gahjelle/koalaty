@@ -35,7 +35,7 @@ fix:
 
 # Set up tasks and run a few of them
 setup:
-    rm -r tasks/
+    rm -rf tasks/
     uv run koalaty task new --from-example wombat
     uv run koalaty task new --from-example quokka
     uv run koalaty task new bilby
