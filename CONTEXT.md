@@ -99,3 +99,15 @@ _Avoid_: feedback, questionnaire, review (that's rubric)
 **turns**:
 A **task** property describing turn structure: `one-shot`, `scripted` (a fixed, ordered list of follow-up turns), or `interactive` (next turn needs human judgment). `one-shot`/`scripted` run under either driver; `interactive` is manual-only. Tool-permission prompts are pre-authorized run config, not turns.
 _Avoid_: mode, multi-turn, conversation
+
+**session status**:
+How the harness **session** *ended*, observed at **harvest** from the transcript: `completed`, `interrupted`, or `errored`. Recorded on the **result**. It is *not* a quality judgment — whether the task's **done**-condition was met is a separate **verdict** decided later by **paws** / **survey** (see [ADR-0014](docs/adr/0014-harvest-records-session-status-not-success.md)).
+_Avoid_: outcome, success/failure (those imply task accomplishment), exit code
+
+**verdict**:
+The later judgment of whether a **run** met its task's **done**-condition, produced by **paws** (mechanical) and/or the **survey** — distinct from **session status**, which only says how the session ended.
+_Avoid_: outcome, success, pass/fail
+
+**metrics**:
+The objective resource-use a **harvest** normalizes off a **session** for comparison: bucketed token counts, **active time** (model working) and **wallclock** (end-to-end, includes human idle on manual runs), and tool-call aggregates. Dollar **cost** is *not* stored — it is derived at report time against current pricing (see [ADR-0012](docs/adr/0012-tokens-stored-cost-derived.md)).
+_Avoid_: stats, usage, telemetry
