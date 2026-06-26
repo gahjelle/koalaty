@@ -10,7 +10,7 @@ import pytest
 from koalaty.adapters.fake import FAKE_SESSION_ID
 from koalaty.exceptions import HarvestError
 from koalaty.runs import harvest_manual, run_automated, start_manual
-from koalaty.schemas.result import Outcome
+from koalaty.schemas.result import SessionStatus
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ def test_run_automated_writes_result_and_returns_it(
     assert result.harness == "fake"
     assert result.model == "opus48"
     assert result.driver == "koalaty"
-    assert result.outcome == Outcome.success
+    assert result.session_status == SessionStatus.completed
     assert result.turns == "one-shot"
     assert result.tags == []
     assert result.run_id.startswith("quokka-fake-opus48-")
@@ -123,7 +123,7 @@ def test_harvest_manual_completes_pending_into_result(
     assert result.harness == "fake"
     assert result.model == "opus48"
     assert result.driver == "human"
-    assert result.outcome == Outcome.success
+    assert result.session_status == SessionStatus.completed
     assert result.turns == "one-shot"
     assert result.tags == ["drop-bear"]
 

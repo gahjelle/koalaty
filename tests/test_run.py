@@ -45,7 +45,8 @@ def test_run_writes_result_and_raw_session(
     assert result["harness"] == "fake"
     assert result["model"] == "opus48"
     assert result["driver"] == "koalaty"
-    assert result["outcome"] == "success"
+    assert result["session_status"] == "completed"
+    assert "outcome" not in result
     assert result["summary"]
     assert result["tags"] == []
     assert result["turns"] == "one-shot"

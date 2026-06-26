@@ -95,7 +95,7 @@ def test_harvest_completes_pending_run(
     run_dir = pouch / run_id
     result = json.loads((run_dir / "result.json").read_text())
     assert result["driver"] == "human"
-    assert result["outcome"] == "success"
+    assert result["session_status"] == "completed"
     assert (run_dir / "raw" / "session.json").exists()
     assert not (run_dir / "pending.json").exists()
 

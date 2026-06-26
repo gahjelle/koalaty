@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid, render_grid
-from koalaty.schemas.result import Outcome, Result
+from koalaty.schemas.result import Result, SessionStatus
 from koalaty.schemas.tasks import Turns
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ _TS = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def _result(
-    model: str, harness: str, outcome: Outcome, *, task: str = "quokka"
+    model: str, harness: str, status: SessionStatus, *, task: str = "quokka"
 ) -> Result:
     """Build a minimal result for grid tests."""
     return Result(
@@ -28,7 +28,7 @@ def _result(
         driver="koalaty",
         started_at=_TS,
         finished_at=_TS,
-        outcome=outcome,
+        session_status=status,
         summary="s",
         tags=[],
         turns=Turns.one_shot,
@@ -38,18 +38,18 @@ def _result(
 def test_build_grid_tallies_per_task_model() -> None:
     """build_grid tallies per (task, model), filtered to the given harness."""
     results = [
-        _result("opus48", "fake", Outcome.success),
-        _result("opus48", "fake", Outcome.failure),
-        _result("sonnet46", "fake", Outcome.success),
-        _result("opus48", "fake", Outcome.success, task="wombat"),
-        _result("opus48", "claudecode", Outcome.success),
+        _result("opus48", "fake", SessionStatus.completed),
+        _result("opus48", "fake", SessionStatus.errored),
+        _result("sonnet46", "fake", SessionStatus.completed),
+        _result("opus48", "fake", SessionStatus.completed, task="wombat"),
+        _result("opus48", "claudecode", SessionStatus.completed),
     ]
     grid = build_grid(results, "fake")
 
     assert grid.harness == "fake"
-    assert grid.tallies[("quokka", "opus48")] == Tally(success=1, failure=1)
-    assert grid.tallies[("quokka", "sonnet46")] == Tally(success=1, failure=0)
-    assert grid.tallies[("wombat", "opus48")] == Tally(success=1, failure=0)
+    assert grid.tallies[("quokka", "opus48")] == Tally(completed=1, incomplete=1)
+    assert grid.tallies[("quokka", "sonnet46")] == Tally(completed=1, incomplete=0)
+    assert grid.tallies[("wombat", "opus48")] == Tally(completed=1, incomplete=0)
     assert ("quokka", "opus48") in grid.tallies
     assert grid.tasks == ["quokka", "wombat"]
     assert grid.models == ["opus48", "sonnet46"]
@@ -58,9 +58,9 @@ def test_build_grid_tallies_per_task_model() -> None:
 def test_render_grid_is_titled_harness_with_model_columns() -> None:
     """render_grid titles the table with the harness, columns = models."""
     results = [
-        _result("opus48", "fake", Outcome.success, task="quokka"),
-        _result("sonnet46", "fake", Outcome.failure, task="quokka"),
-        _result("opus48", "fake", Outcome.success, task="wombat"),
+        _result("opus48", "fake", SessionStatus.completed, task="quokka"),
+        _result("sonnet46", "fake", SessionStatus.errored, task="quokka"),
+        _result("opus48", "fake", SessionStatus.completed, task="wombat"),
     ]
     table = render_grid(build_grid(results, "fake"))
 
@@ -72,8 +72,8 @@ def test_render_grid_is_titled_harness_with_model_columns() -> None:
 def test_render_grid_marks_empty_task_model_combos() -> None:
     """An absent (task, model) combo renders as the dim empty-cell glyph."""
     results = [
-        _result("opus48", "fake", Outcome.success, task="quokka"),
-        _result("sonnet46", "fake", Outcome.success, task="wombat"),
+        _result("opus48", "fake", SessionStatus.completed, task="quokka"),
+        _result("sonnet46", "fake", SessionStatus.completed, task="wombat"),
     ]
     table = render_grid(build_grid(results, "fake"))
 

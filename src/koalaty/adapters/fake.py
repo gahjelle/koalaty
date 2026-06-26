@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from koalaty.adapters.base import HarvestedSession
-from koalaty.schemas.result import Outcome
+from koalaty.schemas.result import SessionStatus
 
 if TYPE_CHECKING:
     from koalaty.schemas.tasks import Task
@@ -83,7 +83,7 @@ class FakeAdapter:
         return HarvestedSession(
             started_at=FAKE_STARTED_AT,
             finished_at=FAKE_FINISHED_AT,
-            outcome=Outcome.success,
+            session_status=SessionStatus.completed,
             summary=summary,
             raw=raw,
         )
