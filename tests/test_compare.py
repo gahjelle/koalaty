@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid, render_grid
+from koalaty.schemas.metrics import Metrics, TokenUsage, ToolCalls
 from koalaty.schemas.result import Result, SessionStatus
 from koalaty.schemas.tasks import Turns
 
@@ -14,6 +15,9 @@ if TYPE_CHECKING:
     from tests.conftest import TaskWriter
 
 _TS = datetime(2026, 1, 1, tzinfo=UTC)
+_METRICS = Metrics(
+    tokens=TokenUsage(), active_ms=0, wallclock_ms=0, tool_calls=ToolCalls()
+)
 
 
 def _result(
@@ -30,6 +34,7 @@ def _result(
         finished_at=_TS,
         session_status=status,
         summary="s",
+        metrics=_METRICS,
         tags=[],
         turns=Turns.one_shot,
     )

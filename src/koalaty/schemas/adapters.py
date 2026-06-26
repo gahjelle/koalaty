@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from koalaty.schemas import FrozenModel
+from koalaty.schemas.metrics import Metrics
 from koalaty.schemas.result import SessionStatus
 
 __all__ = ["HarvestedSession"]
@@ -20,4 +21,5 @@ class HarvestedSession(FrozenModel):
     finished_at: datetime
     session_status: SessionStatus
     summary: str
+    metrics: Metrics
     raw: dict[str, Any]
