@@ -12,11 +12,17 @@ from koalaty import pouch
 from koalaty.adapters import get_adapter, known_harnesses
 from koalaty.adapters.base import Adapter, InvocableAdapter
 from koalaty.schemas.pending import PendingRun
+from koalaty.schemas.provenance import Provenance
 from koalaty.schemas.result import Result
-from koalaty.schemas.tasks import Task, Turns
+from koalaty.schemas.tasks import GitGum, Gum, Task, Turns
 from koalaty.survey import Asker, collect_survey
 
 __all__ = ["harvest_manual", "run_automated", "start_manual"]
+
+
+def gum_commit(gum: Gum) -> str | None:
+    """Return a git gum's pinned commit, or `None` for an inline gum."""
+    return gum.commit if isinstance(gum, GitGum) else None
 
 
 def require_adapter(harness: str) -> Adapter:
@@ -72,8 +78,16 @@ def run_automated(
         driver="koalaty",
         started_at=harvested.started_at,
         finished_at=harvested.finished_at,
-        outcome=harvested.outcome,
+        session_status=harvested.session_status,
         summary=harvested.summary,
+        metrics=harvested.metrics,
+        models_seen=harvested.models_seen,
+        provenance=Provenance(
+            harness_version=harvested.harness_version,
+            model=model,
+            date=harvested.started_at.date(),
+            gum_commit=gum_commit(task.gum),
+        ),
         tags=task.tags,
         turns=task.turns,
         joey=joey,
@@ -115,6 +129,7 @@ def start_manual(
         driver="human",
         turns=task.turns,
         tags=task.tags,
+        gum_commit=gum_commit(task.gum),
         joey=joey,
         created_at=started,
     )
@@ -155,8 +170,16 @@ def harvest_manual(
         driver="human",
         started_at=harvested.started_at,
         finished_at=harvested.finished_at,
-        outcome=harvested.outcome,
+        session_status=harvested.session_status,
         summary=harvested.summary,
+        metrics=harvested.metrics,
+        models_seen=harvested.models_seen,
+        provenance=Provenance(
+            harness_version=harvested.harness_version,
+            model=pending.model,
+            date=harvested.started_at.date(),
+            gum_commit=pending.gum_commit,
+        ),
         tags=pending.tags,
         turns=pending.turns,
         joey=pending.joey if joey is None else joey,

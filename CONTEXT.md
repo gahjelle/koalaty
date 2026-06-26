@@ -111,3 +111,7 @@ _Avoid_: outcome, success, pass/fail
 **metrics**:
 The objective resource-use a **harvest** normalizes off a **session** for comparison: bucketed token counts, **active time** (model working) and **wallclock** (end-to-end, includes human idle on manual runs), and tool-call aggregates. Dollar **cost** is *not* stored — it is derived at report time against current pricing (see [ADR-0012](docs/adr/0012-tokens-stored-cost-derived.md)).
 _Avoid_: stats, usage, telemetry
+
+**provenance**:
+The reproducibility metadata stamped on a **result**: the harness CLI version (observed at **harvest**), the canonical **model**, the run date, and the gum commit (a git **gum**'s pinned commit, or absent for an inline gum). A self-contained record of the conditions a **run** happened under — enough to reproduce it — not a pointer into them. Distinct from **metrics** (resource-use) and **session status** (how it ended).
+_Avoid_: reproducibility metadata, repro info, environment

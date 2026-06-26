@@ -3,7 +3,7 @@
 A manual run is *pending* between `start` and `harvest`. It is stored as its
 own `pending.json` so a `result.json` always means a completed run (ADR-0008).
 A `PendingRun` carries only what `start` knows; the harvest-derived fields
-(outcome, summary, timestamps) appear on `Result`, never here.
+(session status, summary, timestamps, metrics) appear on `Result`, never here.
 """
 
 from datetime import datetime
@@ -31,5 +31,6 @@ class PendingRun(FrozenModel):
     driver: str
     turns: Turns
     tags: list[str]
+    gum_commit: str | None = None
     joey: bool = False
     created_at: datetime

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from rich.table import Table
 
-from koalaty.schemas.result import Outcome
+from koalaty.schemas.result import SessionStatus
 
 __all__ = ["Grid", "Tally", "build_grid", "render_grid"]
 
@@ -18,16 +18,20 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Tally:
-    """The outcome counts for one (task, model) cell of a grid."""
+    """Session-status counts for one (task, model) cell of a grid.
 
-    success: int = 0
-    failure: int = 0
+    Counts how each session *ended* (`completed` vs not) — not a success/failure
+    verdict, which paws/survey decide later (see ADR-0014).
+    """
 
-    def add(self, outcome: Outcome) -> Tally:
-        """Return a new tally with `outcome` counted in."""
-        if outcome is Outcome.success:
-            return Tally(self.success + 1, self.failure)
-        return Tally(self.success, self.failure + 1)
+    completed: int = 0
+    incomplete: int = 0
+
+    def add(self, status: SessionStatus) -> Tally:
+        """Return a new tally with `status` counted in."""
+        if status is SessionStatus.completed:
+            return Tally(self.completed + 1, self.incomplete)
+        return Tally(self.completed, self.incomplete + 1)
 
 
 @dataclass
@@ -55,7 +59,7 @@ def build_grid(results: Iterable[Result], harness: str) -> Grid:
         if result.harness != harness:
             continue
         key = (result.task, result.model)
-        tallies[key] = tallies[key].add(result.outcome)
+        tallies[key] = tallies[key].add(result.session_status)
     return Grid(harness=harness, tallies=dict(tallies))
 
 
@@ -63,11 +67,11 @@ def render_cell(tally: Tally | None) -> str:
     """Render a cell: colored tally, or a dim dash for an empty combo."""
     if tally is None:
         return "[dim]\N{EN DASH}[/dim]"
-    if tally.failure == 0:
-        return f"[green]{tally.success} ✓[/green]"
-    if tally.success == 0:
-        return f"[red]{tally.failure} ✗[/red]"
-    return f"[yellow]{tally.success} ✓ / {tally.failure} ✗[/yellow]"
+    if tally.incomplete == 0:
+        return f"[green]{tally.completed} ✓[/green]"
+    if tally.completed == 0:
+        return f"[red]{tally.incomplete} ✗[/red]"
+    return f"[yellow]{tally.completed} ✓ / {tally.incomplete} ✗[/yellow]"
 
 
 def render_grid(grid: Grid) -> Table:

@@ -45,11 +45,78 @@ def test_run_writes_result_and_raw_session(
     assert result["harness"] == "fake"
     assert result["model"] == "opus48"
     assert result["driver"] == "koalaty"
-    assert result["outcome"] == "success"
+    assert result["session_status"] == "completed"
+    assert "outcome" not in result
     assert result["summary"]
     assert result["tags"] == []
     assert result["turns"] == "one-shot"
     assert (run_dir / "raw" / "session.json").exists()
+
+
+def test_run_records_metrics(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """The result carries bucketed tokens, active/wallclock ms, and tool calls."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(run_args())
+
+    metrics = json.loads((pouch / run_id / "result.json").read_text())["metrics"]
+    assert set(metrics["tokens"]) == {
+        "input",
+        "output",
+        "cache_creation",
+        "cache_read",
+    }
+    assert metrics["active_ms"] >= 0
+    assert metrics["wallclock_ms"] >= metrics["active_ms"]
+    tool_calls = metrics["tool_calls"]
+    assert tool_calls["total"] == sum(tool_calls["by_name"].values())
+    assert tool_calls["failures"] >= 0
+    # Cost is derived later (ADR-0012); the diff is a later slice (ADR-0013).
+    assert "cost" not in metrics
+    assert "diff" not in metrics
+
+
+def test_run_records_models_seen(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Every model the session touched is recorded with its own token buckets."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(run_args())
+
+    result = json.loads((pouch / run_id / "result.json").read_text())
+    models_seen = result["models_seen"]
+    assert models_seen
+    assert result["model"] in {entry["model"] for entry in models_seen}
+    assert set(models_seen[0]["tokens"]) == {
+        "input",
+        "output",
+        "cache_creation",
+        "cache_read",
+    }
+
+
+def test_run_records_provenance(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Reproducibility metadata (harness version, model, date, gum) is recorded."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(run_args())
+
+    provenance = json.loads((pouch / run_id / "result.json").read_text())["provenance"]
+    assert provenance["harness_version"]
+    assert provenance["model"] == "opus48"
+    assert provenance["date"] == "2026-01-01"  # the fake session's start date
+    assert provenance["gum_commit"] is None  # inline gum carries no commit
 
 
 def test_run_session_uses_task_opening_prompt(

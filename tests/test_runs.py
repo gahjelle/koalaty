@@ -10,7 +10,7 @@ import pytest
 from koalaty.adapters.fake import FAKE_SESSION_ID
 from koalaty.exceptions import HarvestError
 from koalaty.runs import harvest_manual, run_automated, start_manual
-from koalaty.schemas.result import Outcome
+from koalaty.schemas.result import SessionStatus
 from koalaty.tasks import load_task
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ def test_run_automated_writes_result_and_returns_it(
     assert result.harness == "fake"
     assert result.model == "opus48"
     assert result.driver == "koalaty"
-    assert result.outcome == Outcome.success
+    assert result.session_status == SessionStatus.completed
     assert result.turns == "one-shot"
     assert result.tags == []
     assert result.run_id.startswith("quokka-fake-opus48-")
@@ -44,6 +44,45 @@ def test_run_automated_writes_result_and_returns_it(
     stored = json.loads((run_dir / "result.json").read_text())
     assert stored["run_id"] == result.run_id
     assert (run_dir / "raw" / "session.json").exists()
+
+
+_GIT_GUM = """
+[gum]
+type = "git"
+url = "https://example.com/repo.git"
+commit = "0123456789abcdef0123456789abcdef01234567"
+"""
+
+
+def test_run_automated_records_git_gum_commit(
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """A git gum's pinned commit lands in the result's provenance."""
+    pouch = tmp_path / "pouch"
+    tasks_dir = make_task(tmp_path / "tasks", "quokka", gum=_GIT_GUM)
+    task = load_task(tasks_dir, "quokka")
+
+    result = run_automated(task, "fake", "opus48", pouch_dir=pouch)
+
+    assert result.provenance.gum_commit == "0123456789abcdef0123456789abcdef01234567"
+
+
+def test_manual_run_rides_gum_commit_through_pending(
+    tmp_path: Path,
+    make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
+) -> None:
+    """Start captures the gum commit; harvest stamps it onto provenance."""
+    pouch = tmp_path / "pouch"
+    tasks_dir = make_task(tmp_path / "tasks", "quokka", gum=_GIT_GUM)
+    task = load_task(tasks_dir, "quokka")
+
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
+    assert pending.gum_commit == "0123456789abcdef0123456789abcdef01234567"
+
+    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
+    assert result.provenance.gum_commit == "0123456789abcdef0123456789abcdef01234567"
 
 
 def test_run_automated_rejects_unknown_harness(
@@ -123,7 +162,7 @@ def test_harvest_manual_completes_pending_into_result(
     assert result.harness == "fake"
     assert result.model == "opus48"
     assert result.driver == "human"
-    assert result.outcome == Outcome.success
+    assert result.session_status == SessionStatus.completed
     assert result.turns == "one-shot"
     assert result.tags == ["drop-bear"]
 
