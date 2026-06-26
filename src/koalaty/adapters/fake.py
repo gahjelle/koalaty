@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from koalaty.adapters.base import HarvestedSession
-from koalaty.schemas.metrics import Metrics, TokenUsage, ToolCalls
+from koalaty.schemas.metrics import Metrics, ModelUsage, TokenUsage, ToolCalls
 from koalaty.schemas.result import SessionStatus
 
 if TYPE_CHECKING:
@@ -16,6 +16,8 @@ __all__ = ["FakeAdapter"]
 FAKE_STARTED_AT = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
 FAKE_FINISHED_AT = datetime(2026, 1, 1, 12, 1, 30, tzinfo=UTC)
 FAKE_SESSION_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+# The model a manually-driven fake session reports when the transcript names none.
+FAKE_MODEL = "opus48"
 
 # Deterministic stand-in metrics — a plausible shape, not a measurement.
 FAKE_METRICS = Metrics(
@@ -89,11 +91,13 @@ class FakeAdapter:
         else:
             msg = f"unknown session {session_id!r}"
             raise ValueError(msg)
+        observed_model = raw.get("model", FAKE_MODEL)
         return HarvestedSession(
             started_at=FAKE_STARTED_AT,
             finished_at=FAKE_FINISHED_AT,
             session_status=SessionStatus.completed,
             summary=summary,
             metrics=FAKE_METRICS,
+            models_seen=[ModelUsage(model=observed_model, tokens=FAKE_METRICS.tokens)],
             raw=raw,
         )

@@ -35,6 +35,7 @@ def _result(
         session_status=status,
         summary="s",
         metrics=_METRICS,
+        models_seen=[],
         tags=[],
         turns=Turns.one_shot,
     )

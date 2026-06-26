@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from koalaty.schemas import FrozenModel
-from koalaty.schemas.metrics import Metrics
+from koalaty.schemas.metrics import Metrics, ModelUsage
 from koalaty.schemas.survey import Survey
 from koalaty.schemas.tasks import Turns
 
@@ -43,6 +43,7 @@ class Result(FrozenModel):
     session_status: SessionStatus
     summary: str
     metrics: Metrics
+    models_seen: list[ModelUsage]
     tags: list[str]
     turns: Turns
     joey: bool = False

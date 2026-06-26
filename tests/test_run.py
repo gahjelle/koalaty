@@ -80,6 +80,28 @@ def test_run_records_metrics(
     assert "diff" not in metrics
 
 
+def test_run_records_models_seen(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Every model the session touched is recorded with its own token buckets."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(run_args())
+
+    result = json.loads((pouch / run_id / "result.json").read_text())
+    models_seen = result["models_seen"]
+    assert models_seen
+    assert result["model"] in {entry["model"] for entry in models_seen}
+    assert set(models_seen[0]["tokens"]) == {
+        "input",
+        "output",
+        "cache_creation",
+        "cache_read",
+    }
+
+
 def test_run_session_uses_task_opening_prompt(
     app: App,
     tmp_path: Path,
