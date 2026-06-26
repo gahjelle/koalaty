@@ -53,6 +53,16 @@ rule and how to satisfy it:
   args are hard to call correctly. Beyond 3, make parameters keyword-only
   (after a bare `*` separator). `self`/`cls` in methods don't count toward
   the limit. Use a bare `*` separator to make additional parameters keyword-only.
+- **KOA010 — no duplicate numeric prefixes in `docs/adr/`.** Two ADR files must
+  not share the same `NNNN-` prefix. Parallel branches each adding "the next"
+  ADR collide on a number; this catches it at `just check` time, before merge.
+  Renumber one of the colliders so every ADR prefix is unique.
+- **KOA011 — ADR numbers are consecutive from `0001`.** The prefixes in
+  `docs/adr/` must form `0001, 0002, …, N` with no gaps and no zero. A gap
+  suggests a deleted or missing ADR; a non-1-based start suggests a truncation.
+  Both are drift from the sequential convention in
+  [domain.md](./domain.md). Unlike the other rules, KOA010/KOA011 scan the
+  `docs/adr/` directory rather than the files passed on the command line.
 
 ## Style
 

@@ -6,6 +6,7 @@ from pathlib import Path
 from tools.repolint import (
     DEFAULT_PATHS,
     EXEMPT_MODULES,
+    check_adr_numbering,
     check_source,
     check_text,
     fix_source,
@@ -176,3 +177,37 @@ def test_allows_non_exempt_module_in_type_checking() -> None:
     )
 
     assert "KOA008" not in _codes(source)
+
+
+def _adr_codes(adr_dir: Path, names: list[str]) -> set[str]:
+    for name in names:
+        (adr_dir / name).write_text("", encoding="utf-8")
+    return {v.code for v in check_adr_numbering(adr_dir)}
+
+
+def test_flags_duplicate_adr_prefix(tmp_path: Path) -> None:
+    """Two ADR files sharing a numeric prefix are KOA010."""
+    names = ["0001-alpha.md", "0002-beta.md", "0002-gamma.md"]
+
+    assert "KOA010" in _adr_codes(tmp_path, names)
+
+
+def test_flags_gap_in_adr_numbering(tmp_path: Path) -> None:
+    """A missing number in the ADR sequence is KOA011."""
+    names = ["0001-alpha.md", "0003-gamma.md"]
+
+    assert "KOA011" in _adr_codes(tmp_path, names)
+
+
+def test_flags_adr_numbering_not_starting_at_one(tmp_path: Path) -> None:
+    """A sequence that starts above 0001 is KOA011."""
+    names = ["0002-beta.md", "0003-gamma.md"]
+
+    assert "KOA011" in _adr_codes(tmp_path, names)
+
+
+def test_clean_adr_directory_has_no_violations(tmp_path: Path) -> None:
+    """Unique, gapless ADR numbering from 0001 raises nothing."""
+    names = ["0001-alpha.md", "0002-beta.md", "0003-gamma.md"]
+
+    assert _adr_codes(tmp_path, names) == set()

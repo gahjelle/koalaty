@@ -11,6 +11,8 @@ Encodes the rules in the `repo-coding-conventions` policy:
   KOA007  no possessive `my` prefix (`my`+_/-, `My`+uppercase) in code or docs
   KOA008  ruff-exempt modules stay at runtime, not in TYPE_CHECKING
   KOA009  at most 3 positional parameters — use keyword-only args beyond that
+  KOA010  no duplicate numeric prefixes among `docs/adr/` filenames
+  KOA011  ADR numbers are consecutive from `0001` with no gaps
 
 Run: `uv run python -m tools.repolint [paths...]` (defaults to `src/` and `tests/`).
 Pass `--fix` to auto-apply the safe textual fixes (KOA001, KOA004).
@@ -21,6 +23,7 @@ import ast
 import re
 import sys
 import tomllib
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -28,12 +31,15 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PATHS = ["src/", "tests/"]
 LINT_SUFFIXES = (".py", ".md")
 DOUBLE_BACKTICK = "`" * 2
 FUTURE_ANNOTATIONS = "from __future__ import annotations"
-PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
+PYPROJECT = REPO_ROOT / "pyproject.toml"
 MY_PREFIX_RE = re.compile(r"\bmy[_-]|\bMy[A-Z]")
+ADR_DIR = REPO_ROOT / "docs" / "adr"
+ADR_NAME_RE = re.compile(r"^(\d{4})-.*\.md$")
 
 
 def _load_exempt_modules() -> frozenset[str]:
@@ -298,6 +304,60 @@ def check_text(source: str, path: Path) -> list[Violation]:
     return [v for check in TEXT_CHECKS for v in check(source, path)]
 
 
+def _check_duplicate_prefixes(
+    numbered: list[tuple[int, Path]],
+) -> Iterator[Violation]:
+    counts = Counter(number for number, _ in numbered)
+    for number, path in numbered:
+        if counts[number] > 1:
+            yield Violation(
+                path,
+                1,
+                1,
+                "KOA010",
+                f"duplicate ADR number {number:04d};"
+                " each ADR file needs a unique numeric prefix",
+            )
+
+
+def _check_consecutive_numbering(
+    numbered: list[tuple[int, Path]],
+    adr_dir: Path,
+) -> Iterator[Violation]:
+    present = sorted({number for number, _ in numbered})
+    if not present:
+        return
+    expected = list(range(1, len(present) + 1))
+    if present != expected:
+        got = ", ".join(f"{number:04d}" for number in present)
+        yield Violation(
+            adr_dir,
+            1,
+            1,
+            "KOA011",
+            f"ADR numbers must be consecutive from 0001 with no gaps;"
+            f" got {got}, expected 0001\N{EN DASH}{len(present):04d}",
+        )
+
+
+def check_adr_numbering(adr_dir: Path) -> list[Violation]:
+    """Return ADR-directory numbering violations (KOA010, KOA011).
+
+    Scans adr_dir for `NNNN-*.md` files and checks that their numeric
+    prefixes are unique (KOA010) and form a consecutive run from `0001`
+    (KOA011) — the sequential convention from `docs/agents/domain.md`.
+    """
+    numbered = [
+        (int(match.group(1)), path)
+        for path in sorted(adr_dir.glob("*.md"))
+        if (match := ADR_NAME_RE.match(path.name))
+    ]
+    return [
+        *_check_duplicate_prefixes(numbered),
+        *_check_consecutive_numbering(numbered, adr_dir),
+    ]
+
+
 def fix_source(source: str) -> str:
     """Apply the safe textual fixes (KOA004 single backticks, KOA001 future import)."""
     tree = ast.parse(source)
@@ -346,6 +406,9 @@ def main(argv: list[str] | None = None) -> int:
                     source = fixed
             violations.extend(check_source(source, file))
         violations.extend(check_text(source, file))
+
+    if ADR_DIR.is_dir():
+        violations.extend(check_adr_numbering(ADR_DIR))
 
     for violation in violations:
         sys.stdout.write(violation.render() + "\n")
