@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from koalaty.schemas import FrozenModel
 from koalaty.schemas.metrics import Metrics, ModelUsage
+from koalaty.schemas.provenance import Provenance
 from koalaty.schemas.survey import Survey
 from koalaty.schemas.tasks import Turns
 
@@ -44,6 +45,7 @@ class Result(FrozenModel):
     summary: str
     metrics: Metrics
     models_seen: list[ModelUsage]
+    provenance: Provenance
     tags: list[str]
     turns: Turns
     joey: bool = False

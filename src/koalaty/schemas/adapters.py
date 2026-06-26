@@ -23,4 +23,5 @@ class HarvestedSession(FrozenModel):
     summary: str
     metrics: Metrics
     models_seen: list[ModelUsage]
+    harness_version: str
     raw: dict[str, Any]

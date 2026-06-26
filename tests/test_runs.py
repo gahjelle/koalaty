@@ -46,6 +46,45 @@ def test_run_automated_writes_result_and_returns_it(
     assert (run_dir / "raw" / "session.json").exists()
 
 
+_GIT_GUM = """
+[gum]
+type = "git"
+url = "https://example.com/repo.git"
+commit = "0123456789abcdef0123456789abcdef01234567"
+"""
+
+
+def test_run_automated_records_git_gum_commit(
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """A git gum's pinned commit lands in the result's provenance."""
+    pouch = tmp_path / "pouch"
+    tasks_dir = make_task(tmp_path / "tasks", "quokka", gum=_GIT_GUM)
+    task = load_task(tasks_dir, "quokka")
+
+    result = run_automated(task, "fake", "opus48", pouch_dir=pouch)
+
+    assert result.provenance.gum_commit == "0123456789abcdef0123456789abcdef01234567"
+
+
+def test_manual_run_rides_gum_commit_through_pending(
+    tmp_path: Path,
+    make_task: TaskWriter,
+    stub_asker: Callable[..., StubAsker],
+) -> None:
+    """Start captures the gum commit; harvest stamps it onto provenance."""
+    pouch = tmp_path / "pouch"
+    tasks_dir = make_task(tmp_path / "tasks", "quokka", gum=_GIT_GUM)
+    task = load_task(tasks_dir, "quokka")
+
+    pending, _ = start_manual(task, "fake", "opus48", pouch_dir=pouch)
+    assert pending.gum_commit == "0123456789abcdef0123456789abcdef01234567"
+
+    result = harvest_manual(pending.run_id, FAKE_SESSION_ID, pouch, ask=stub_asker())
+    assert result.provenance.gum_commit == "0123456789abcdef0123456789abcdef01234567"
+
+
 def test_run_automated_rejects_unknown_harness(
     tmp_path: Path,
     make_task: TaskWriter,

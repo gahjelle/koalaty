@@ -102,6 +102,23 @@ def test_run_records_models_seen(
     }
 
 
+def test_run_records_provenance(
+    app: App,
+    tmp_path: Path,
+    make_task: TaskWriter,
+) -> None:
+    """Reproducibility metadata (harness version, model, date, gum) is recorded."""
+    pouch = tmp_path / "pouch"
+    make_task(tmp_path / "tasks", "quokka")
+    run_id = app(run_args())
+
+    provenance = json.loads((pouch / run_id / "result.json").read_text())["provenance"]
+    assert provenance["harness_version"]
+    assert provenance["model"] == "opus48"
+    assert provenance["date"] == "2026-01-01"  # the fake session's start date
+    assert provenance["gum_commit"] is None  # inline gum carries no commit
+
+
 def test_run_session_uses_task_opening_prompt(
     app: App,
     tmp_path: Path,

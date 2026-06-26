@@ -18,6 +18,7 @@ FAKE_FINISHED_AT = datetime(2026, 1, 1, 12, 1, 30, tzinfo=UTC)
 FAKE_SESSION_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 # The model a manually-driven fake session reports when the transcript names none.
 FAKE_MODEL = "opus48"
+FAKE_HARNESS_VERSION = "fake-1.0.0"
 
 # Deterministic stand-in metrics — a plausible shape, not a measurement.
 FAKE_METRICS = Metrics(
@@ -99,5 +100,6 @@ class FakeAdapter:
             summary=summary,
             metrics=FAKE_METRICS,
             models_seen=[ModelUsage(model=observed_model, tokens=FAKE_METRICS.tokens)],
+            harness_version=FAKE_HARNESS_VERSION,
             raw=raw,
         )

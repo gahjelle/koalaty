@@ -31,5 +31,6 @@ class PendingRun(FrozenModel):
     driver: str
     turns: Turns
     tags: list[str]
+    gum_commit: str | None = None
     joey: bool = False
     created_at: datetime

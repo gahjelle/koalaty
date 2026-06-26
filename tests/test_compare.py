@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from koalaty.compare import Tally, build_grid, render_grid
 from koalaty.schemas.metrics import Metrics, TokenUsage, ToolCalls
+from koalaty.schemas.provenance import Provenance
 from koalaty.schemas.result import Result, SessionStatus
 from koalaty.schemas.tasks import Turns
 
@@ -18,6 +19,7 @@ _TS = datetime(2026, 1, 1, tzinfo=UTC)
 _METRICS = Metrics(
     tokens=TokenUsage(), active_ms=0, wallclock_ms=0, tool_calls=ToolCalls()
 )
+_PROVENANCE = Provenance(harness_version="fake-1.0.0", model="opus48", date=_TS.date())
 
 
 def _result(
@@ -36,6 +38,7 @@ def _result(
         summary="s",
         metrics=_METRICS,
         models_seen=[],
+        provenance=_PROVENANCE,
         tags=[],
         turns=Turns.one_shot,
     )
