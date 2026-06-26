@@ -4,12 +4,12 @@ The two settings (`pouch`, `tasks`) are no longer CLI flags. They are resolved
 once at import — `KOALATY_POUCH` / `KOALATY_TASKS` env var, else the packaged
 default — and read from the `config` singleton (`config.pouch`, `config.tasks`)
 in the command bodies. The `--pouch` / `--tasks` flags are dropped. This
-**supersedes the flag half of [ADR-0006](0006-configuration-via-configaroo.md)**:
+**supersedes the flag half of [ADR-0007](0007-configuration-via-configaroo.md)**:
 configaroo still owns file + env + defaults, but cyclopts no longer owns a
 per-invocation override for these two keys. The invariant layer is unchanged.
 
 This is what unblocks early task-name validation
-([ADR-0011](0011-cli-error-seam-and-dynamic-task-literal.md) covers the error
+([ADR-0012](0012-cli-error-seam-and-dynamic-task-literal.md) covers the error
 seam; the dynamic task `Literal` is the other half). The valid task ids live
 under the tasks dir. While the tasks dir was a per-invocation `--tasks` flag,
 parsed in the same pass as `run`'s `task` argument, a build-time choice list
@@ -33,14 +33,14 @@ settings change in practice.
   the task `Literal` correct and the precedence story simple.
 - **Test isolation: monkeypatch `config` vs. dependency injection.** The old
   suite isolated to `tmp_path` by threading `--tasks`/`--pouch` through the
-  `app([...])` fixture (the DI path ADR-0006 preserved). With the flags gone,
+  `app([...])` fixture (the DI path ADR-0007 preserved). With the flags gone,
   isolation moves to **monkeypatching the now-mutable `config`** in an autouse
   conftest fixture (`monkeypatch.setattr(config, "tasks", tmp_path / "tasks")`,
   same for `pouch`). Mutability exists *for* this: a frozen `Config` could not be
   patched, and binding settings as def-time defaults
   (`def run(..., tasks_dir=config.tasks)`) would freeze the value at import and
   defeat the patch — so commands read `config.tasks` in the body at call time.
-- **User/project config file: still deferred** (as in ADR-0006). Env + packaged
+- **User/project config file: still deferred** (as in ADR-0007). Env + packaged
   default only.
 
 ## Consequences

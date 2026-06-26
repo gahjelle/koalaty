@@ -18,6 +18,6 @@ The session id is **always supplied externally** at `harvest` time — the harne
 
 ## Consequences
 
-- `runs.py` gains `start_manual` (mint id → `adapter.start` → write `pending.json`, `driver="human"`) and `harvest_manual` (load pending → `adapter.harvest` → assemble `Result` → write/remove), mirroring `run_automated`'s literal `driver="koalaty"` (ADR-0005).
+- `runs.py` gains `start_manual` (mint id → `adapter.start` → write `pending.json`, `driver="human"`) and `harvest_manual` (load pending → `adapter.harvest` → assemble `Result` → write/remove), mirroring `run_automated`'s literal `driver="koalaty"` (ADR-0006).
 - `derive_driver` has been removed; routing (may this task be automated?) is now expressed inline — `run_automated` rejects interactive tasks, `start_manual` accepts all — rather than as a named predicate.
 - Real `claudecode.start()`/`harvest()` arrive with the Claude Code adapter (a later slice); the fake proves the seam now.

@@ -67,7 +67,7 @@ rule and how to satisfy it:
 ## Style
 
 - Prefer `pathlib` over `os.path` for filesystem operations.
-- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0005](../adr/0005-runs-module-for-orchestration.md)).
+- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0006](../adr/0006-runs-module-for-orchestration.md)).
 - Adapters live in `adapters/` and follow the interface defined in `adapters/base.py`.
 - Avoid underscore-prefixed names for "private" symbols — the visual noise outweighs the benefit. Control the public API with `__all__` when a module needs to distinguish exported names from internal helpers.
 

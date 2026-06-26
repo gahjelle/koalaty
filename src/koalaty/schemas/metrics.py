@@ -2,7 +2,7 @@
 
 Bucketed token counts, model time (`active_ms`) versus end-to-end wallclock, and
 tool-call aggregates — the comparable, harness-reported facts (see CONTEXT.md).
-Dollar cost is *not* here: it is derived later against current pricing (ADR-0012).
+Dollar cost is *not* here: it is derived later against current pricing (ADR-0013).
 """
 
 from koalaty.schemas import FrozenModel
@@ -14,7 +14,7 @@ class TokenUsage(FrozenModel):
     """Token counts bucketed by kind, kept separate so cost can be re-derived.
 
     Buckets are priced differently, so they are never collapsed into one total
-    (see ADR-0012). Defaults to all-zero for a session that reported nothing.
+    (see ADR-0013). Defaults to all-zero for a session that reported nothing.
     """
 
     input: int = 0
@@ -38,7 +38,7 @@ class ModelUsage(FrozenModel):
     """One model the session touched, with the tokens it accounted for.
 
     Sessions may touch several models (a mid-session switch, sub-agents, the
-    title generator); each is recorded so per-model cost can be derived (ADR-0012).
+    title generator); each is recorded so per-model cost can be derived (ADR-0013).
     """
 
     model: str

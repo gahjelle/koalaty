@@ -61,7 +61,7 @@ class RichAsker:
     """An `Asker` that prompts the driver interactively via Rich.
 
     Prompts go to the shared `stderr` console so the harvested run id stays the
-    only thing on stdout (ADR-0007). `rating` constrains input to 0-5 and re-asks
+    only thing on stdout (ADR-0008). `rating` constrains input to 0-5 and re-asks
     on anything else; `text` accepts free text and defaults to empty.
     """
 

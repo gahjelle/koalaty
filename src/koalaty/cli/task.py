@@ -1,6 +1,6 @@
 """CLI commands for authoring task bundles: `task new` and `task examples`.
 
-The tasks directory is read from `config.tasks` at call time (see ADR-0010)
+The tasks directory is read from `config.tasks` at call time (see ADR-0011)
 rather than taken as a CLI flag.
 """
 

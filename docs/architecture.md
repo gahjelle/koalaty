@@ -49,7 +49,7 @@ koalaty task new [<id>] [--from-example <name>] # scaffold or copy a task direct
 
 ### 1. Tasks (authored, version-controlled)
 
-A **task** is the bundle koalaty owns and holds fixed across models. Plain files, hand-editable, scaffolded by `task new`. Config in TOML, prose in Markdown. Tasks live in a configurable directory (`KOALATY_TASKS`, default `./tasks/`; see [ADR-0010](adr/0010-settings-env-only-mutable-config.md)):
+A **task** is the bundle koalaty owns and holds fixed across models. Plain files, hand-editable, scaffolded by `task new`. Config in TOML, prose in Markdown. Tasks live in a configurable directory (`KOALATY_TASKS`, default `./tasks/`; see [ADR-0011](adr/0011-settings-env-only-mutable-config.md)):
 
 ```
 tasks/<id>/

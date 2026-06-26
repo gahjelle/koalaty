@@ -75,7 +75,7 @@ def test_run_records_metrics(
     tool_calls = metrics["tool_calls"]
     assert tool_calls["total"] == sum(tool_calls["by_name"].values())
     assert tool_calls["failures"] >= 0
-    # Cost is derived later (ADR-0012); the diff is a later slice (ADR-0013).
+    # Cost is derived later (ADR-0013); the diff is a later slice (ADR-0014).
     assert "cost" not in metrics
     assert "diff" not in metrics
 

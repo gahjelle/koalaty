@@ -93,7 +93,7 @@ def write_pending(pouch: Path, pending: PendingRun) -> Path:
     """Write `pending.json` for `pending`'s run dir, creating it. Returns the dir.
 
     A pending run carries no `result.json`, so `read_results` (and thus
-    `compare`) ignores it until `harvest` completes it (ADR-0008).
+    `compare`) ignores it until `harvest` completes it (ADR-0009).
     """
     run_dir = pouch / pending.run_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -107,7 +107,7 @@ def read_pending(pouch: Path, run_id: str) -> PendingRun:
     """Load the `pending.json` for `run_id`, or raise if there is none.
 
     An absent `pending.json` means an unknown or already-harvested run; the
-    caller must write nothing in that case (ADR-0008).
+    caller must write nothing in that case (ADR-0009).
     """
     path = pouch / run_id / PENDING_FILE
     if not path.is_file():

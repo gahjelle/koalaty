@@ -21,7 +21,7 @@ class Tally:
     """Session-status counts for one (task, model) cell of a grid.
 
     Counts how each session *ended* (`completed` vs not) — not a success/failure
-    verdict, which paws/survey decide later (see ADR-0014).
+    verdict, which paws/survey decide later (see ADR-0015).
     """
 
     completed: int = 0

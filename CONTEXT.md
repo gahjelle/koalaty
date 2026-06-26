@@ -43,7 +43,7 @@ A real, ordinary task bundled with koalaty for onboarding, copied into the user'
 _Avoid_: sample, demo, template
 
 **task config**:
-A **task**'s own authored settings (`task.toml`): its `turns`, `tags`, `gum`, and friends. Part of the task bundle. Distinct from koalaty's own **configuration** (the packaged `koalaty.toml` registry of settings + invariants, see [ADR-0006](docs/adr/0006-configuration-via-configaroo.md)) — reserve bare "config"/"configuration" for the latter.
+A **task**'s own authored settings (`task.toml`): its `turns`, `tags`, `gum`, and friends. Part of the task bundle. Distinct from koalaty's own **configuration** (the packaged `koalaty.toml` registry of settings + invariants, see [ADR-0007](docs/adr/0007-configuration-via-configaroo.md)) — reserve bare "config"/"configuration" for the latter.
 _Avoid_: config (use that for koalaty's own settings)
 
 **drop-bear**:
@@ -101,7 +101,7 @@ A **task** property describing turn structure: `one-shot`, `scripted` (a fixed, 
 _Avoid_: mode, multi-turn, conversation
 
 **session status**:
-How the harness **session** *ended*, observed at **harvest** from the transcript: `completed`, `interrupted`, or `errored`. Recorded on the **result**. It is *not* a quality judgment — whether the task's **done**-condition was met is a separate **verdict** decided later by **paws** / **survey** (see [ADR-0014](docs/adr/0014-harvest-records-session-status-not-success.md)).
+How the harness **session** *ended*, observed at **harvest** from the transcript: `completed`, `interrupted`, or `errored`. Recorded on the **result**. It is *not* a quality judgment — whether the task's **done**-condition was met is a separate **verdict** decided later by **paws** / **survey** (see [ADR-0015](docs/adr/0015-harvest-records-session-status-not-success.md)).
 _Avoid_: outcome, success/failure (those imply task accomplishment), exit code
 
 **verdict**:
@@ -109,7 +109,7 @@ The later judgment of whether a **run** met its task's **done**-condition, produ
 _Avoid_: outcome, success, pass/fail
 
 **metrics**:
-The objective resource-use a **harvest** normalizes off a **session** for comparison: bucketed token counts, **active time** (model working) and **wallclock** (end-to-end, includes human idle on manual runs), and tool-call aggregates. Dollar **cost** is *not* stored — it is derived at report time against current pricing (see [ADR-0012](docs/adr/0012-tokens-stored-cost-derived.md)).
+The objective resource-use a **harvest** normalizes off a **session** for comparison: bucketed token counts, **active time** (model working) and **wallclock** (end-to-end, includes human idle on manual runs), and tool-call aggregates. Dollar **cost** is *not* stored — it is derived at report time against current pricing (see [ADR-0013](docs/adr/0013-tokens-stored-cost-derived.md)).
 _Avoid_: stats, usage, telemetry
 
 **provenance**:

@@ -4,7 +4,7 @@
 two settings env vars (`KOALATY_POUCH`, `KOALATY_TASKS`), and validates it into
 a frozen `Config`. `config` is the import-time singleton every module reads from
 — both the fixed invariants and the resolved settings (the CLI defaults
-`--pouch`/`--tasks` to `config.pouch`/`config.tasks`). See ADR-0006.
+`--pouch`/`--tasks` to `config.pouch`/`config.tasks`). See ADR-0007.
 """
 
 from pathlib import Path
