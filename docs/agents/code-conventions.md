@@ -10,7 +10,7 @@
 
 - **ruff** with `select = ["ALL"]` and ignores `COM812`, `D203`, `D213`.
 - Per-file test ignores: `S101`, `PLR2004`, `SLF001`, `INP001`.
-- Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this).
+- Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this). Functions and methods go further — *every* one needs at least a one-line docstring, including `_`-prefixed and nested functions that ruff's `D` rules leave alone (enforced by KOA013 below).
 - Full **type annotations** are required on all public APIs (ruff `ANN` rules enforce this).
 - Never blanket-ignore the linter with `# noqa` — fix the issue or use a targeted `# noqa: CODE` with a comment explaining why.
 - For intentional Unicode characters that trigger RUF001 (ambiguous characters), use `\N{name}` escapes (e.g., `\N{EN DASH}`) instead of the literal character or `\u` escapes. This is self-documenting and avoids the noqa entirely.
@@ -53,11 +53,35 @@ rule and how to satisfy it:
   args are hard to call correctly. Beyond 3, make parameters keyword-only
   (after a bare `*` separator). `self`/`cls` in methods don't count toward
   the limit. Use a bare `*` separator to make additional parameters keyword-only.
+- **KOA010 — no duplicate numeric prefixes in `docs/adr/`.** Two ADR files must
+  not share the same `NNNN-` prefix. Parallel branches each adding "the next"
+  ADR collide on a number; this catches it at `just check` time, before merge.
+  Renumber one of the colliders so every ADR prefix is unique.
+- **KOA011 — ADR numbers are consecutive from `0001`.** The prefixes in
+  `docs/adr/` must form `0001, 0002, …, N` with no gaps and no zero. A gap
+  suggests a deleted or missing ADR; a non-1-based start suggests a truncation.
+  Both are drift from the sequential convention in
+  [domain.md](./domain.md). Unlike the other rules, KOA010/KOA011 scan the
+  `docs/adr/` directory rather than the files passed on the command line.
+- **KOA012 — `@dataclass` must pass `kw_only=True`.** Stdlib dataclasses
+  otherwise accept fields positionally, so a multi-field value object gets
+  built as `Thing(a, b, c, …)` — the same hard-to-read positional soup KOA009
+  guards against at the definition. Making the dataclass `kw_only` forces every
+  call site to name its fields, and `ty` flags any positional construction for
+  free. (Pydantic `FrozenModel`/`StrictModel` already reject positional args,
+  so KOA002's models need nothing extra; this rule covers the stdlib
+  `@dataclass` that KOA002 doesn't.)
+- **KOA013 — every function/method has a docstring.** At least a one-line
+  docstring on *every* `def`/`async def`, including `_`-prefixed helpers and
+  nested functions. ruff's pydocstyle `D` rules only require docstrings on
+  *public* names, so private and nested functions slip through; KOA013 closes
+  that gap. The name plus a behavioral one-liner keeps even tiny helpers
+  self-explanatory.
 
 ## Style
 
 - Prefer `pathlib` over `os.path` for filesystem operations.
-- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0005](../adr/0005-runs-module-for-orchestration.md)).
+- Thin `cli/` layer — application logic lives in domain modules, not in CLI handlers (see [ADR-0006](../adr/0006-runs-module-for-orchestration.md)).
 - Adapters live in `adapters/` and follow the interface defined in `adapters/base.py`.
 - Avoid underscore-prefixed names for "private" symbols — the visual noise outweighs the benefit. Control the public API with `__all__` when a module needs to distinguish exported names from internal helpers.
 

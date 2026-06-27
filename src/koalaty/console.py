@@ -8,7 +8,7 @@ Two module-global singletons other modules import by name:
 
 This split keeps `koalaty compare > grid.txt` clean of chatter. A fileless
 Rich Console resolves `sys.stdout`/`sys.stderr` lazily on each write, so these
-singletons still honor pytest's `capsys`. See ADR-0007.
+singletons still honor pytest's `capsys`. See ADR-0008.
 """
 
 from rich.console import Console

@@ -2,7 +2,7 @@
 
 Two layers live here. *Settings* (`pouch`, `tasks`) are env-overridable top-level
 paths; *invariants* (`task`, `model`, `result`, `run_id`) are fixed contracts
-shared across modules — never overridable (see ADR-0006, ADR-0010).
+shared across modules — never overridable (see ADR-0007, ADR-0011).
 """
 
 from pathlib import Path
@@ -50,7 +50,7 @@ class Config(StrictModel):
 
     A mutable `StrictModel` (not frozen): the settings (`pouch`, `tasks`) are
     resolved once at import, but staying mutable lets tests monkeypatch them for
-    isolation. The invariant sub-sections remain frozen models. See ADR-0010.
+    isolation. The invariant sub-sections remain frozen models. See ADR-0011.
     """
 
     pouch: Path

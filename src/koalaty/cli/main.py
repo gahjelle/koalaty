@@ -3,7 +3,7 @@
 `build_app()` wires the handlers defined in the sibling `runs`, `compare`,
 `task`, and `config` modules into a single cyclopts `App`. It also registers
 the meta-launcher that turns domain errors into friendly Rich boxes (see
-ADR-0011).
+ADR-0012).
 """
 
 from typing import Annotated

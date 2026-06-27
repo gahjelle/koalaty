@@ -1,6 +1,6 @@
 # Configuration via configaroo: a packaged registry and global singleton
 
-> **Partially superseded by [ADR-0010](0010-settings-env-only-mutable-config.md):**
+> **Partially superseded by [ADR-0011](0011-settings-env-only-mutable-config.md):**
 > the `--pouch`/`--tasks` CLI flags are dropped (settings are env + default
 > only), `Config` is now a mutable `StrictModel` rather than frozen, and test
 > isolation monkeypatches `config` instead of threading flags. The two-layer
@@ -56,7 +56,7 @@ is removed so there is exactly one env owner.
 - New runtime dependency: `configaroo`. The packaged `koalaty.toml` must be
   included in the wheel; it is resolved with `Path(__file__).parent / "koalaty.toml"`.
 - `config.py` becomes a `config/` package; the `Config` shape (and its
-  sub-models) lives in `schemas/config.py` per ADR-0004 (shapes shared across
+  sub-models) lives in `schemas/config.py` per ADR-0005 (shapes shared across
   modules live in `schemas/`), while loading + the singleton live in
   `config/__init__.py`.
 - Run-id pieces (date format, shortid length, `result.json`, `raw/session.json`)

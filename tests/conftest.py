@@ -44,7 +44,7 @@ class StubAsker:
         return self.notes
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SurveyStub:
     """Configurable survey answers a test can tweak before harvesting."""
 
@@ -129,6 +129,7 @@ def make_task() -> TaskWriter:
         done: str | None = None,
         rubric: str | None = None,
     ) -> Path:
+        """Write a task bundle under `tasks_root` and return its directory."""
         cfg = config.task
         task_dir = tasks_root / task_id
         task_dir.mkdir(parents=True, exist_ok=True)

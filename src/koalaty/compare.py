@@ -16,12 +16,12 @@ if TYPE_CHECKING:
     from koalaty.schemas.result import Result
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Tally:
     """Session-status counts for one (task, model) cell of a grid.
 
     Counts how each session *ended* (`completed` vs not) — not a success/failure
-    verdict, which paws/survey decide later (see ADR-0014).
+    verdict, which paws/survey decide later (see ADR-0015).
     """
 
     completed: int = 0
@@ -30,11 +30,11 @@ class Tally:
     def add(self, status: SessionStatus) -> Tally:
         """Return a new tally with `status` counted in."""
         if status is SessionStatus.completed:
-            return Tally(self.completed + 1, self.incomplete)
-        return Tally(self.completed, self.incomplete + 1)
+            return Tally(completed=self.completed + 1, incomplete=self.incomplete)
+        return Tally(completed=self.completed, incomplete=self.incomplete + 1)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Grid:
     """A single harness's comparison grid: `(task, model) -> Tally`."""
 

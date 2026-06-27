@@ -49,7 +49,7 @@ def test_config_is_mutable_strict_model(tmp_path: Path) -> None:
     """Config is a mutable StrictModel: settings reassign, extras forbidden.
 
     Mutability is what lets tests monkeypatch `config.tasks`/`config.pouch` for
-    isolation now that the `--tasks`/`--pouch` flags are gone (ADR-0010).
+    isolation now that the `--tasks`/`--pouch` flags are gone (ADR-0011).
     """
     loaded = load_config()
     loaded.tasks = tmp_path / "elsewhere"

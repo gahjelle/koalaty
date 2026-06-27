@@ -6,7 +6,7 @@ lives in the shared types, but all domain logic lives in `koalaty.runs`.
 
 The settings paths (`config.tasks`, `config.pouch`) are read in the command
 bodies, at call time, rather than bound as def-time defaults: binding once at
-import would defeat the test isolation that monkeypatches `config` (ADR-0010).
+import would defeat the test isolation that monkeypatches `config` (ADR-0011).
 The `TaskParam` validator on `run`/`start` rejects unknown tasks at parse time.
 """
 

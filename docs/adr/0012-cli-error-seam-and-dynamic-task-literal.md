@@ -31,7 +31,7 @@ def launcher(*tokens):
   stay debuggable.
 - **One renderer.** A new `console.print_error` renders a red `Error` panel that
   mimics cyclopts' parse-error box, keeping Rich output centralized per
-  [ADR-0007](0007-console-module-stdout-stderr.md). A test asserts the domain
+  [ADR-0008](0008-console-module-stdout-stderr.md). A test asserts the domain
   box and the cyclopts parse box share their framing.
 - Parse errors are unaffected — they still exit through cyclopts' own box.
 
@@ -52,7 +52,7 @@ annotated with a cyclopts `Parameter(validator=validate_task)`. The validator
 checks `config.tasks` at parse time and raises `ValueError` for an unknown task
 id, so cyclopts renders its own error box — before `--harness`/`--model` are
 even required. This relies on settings being import-time knowable, which is why
-the flags had to go ([ADR-0010](0010-settings-env-only-mutable-config.md)).
+the flags had to go ([ADR-0011](0011-settings-env-only-mutable-config.md)).
 
 - **Validator, not `Literal`.** An earlier version used a dynamic `Literal` of
   task ids injected by cloning each handler function and swapping the `task`

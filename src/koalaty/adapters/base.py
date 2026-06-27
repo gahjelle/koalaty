@@ -28,7 +28,7 @@ class Adapter(Protocol):
 
         The instructions tell a human how to drive the session by hand and how
         to find the finished session's id to `harvest` with. `start` never
-        invokes the harness (see ADR-0009).
+        invokes the harness (see ADR-0010).
         """
 
     def harvest(self, session_id: str) -> HarvestedSession:

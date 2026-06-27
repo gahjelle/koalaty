@@ -15,7 +15,7 @@ SCHEMA_VERSION = 1
 
 
 class SessionStatus(StrEnum):
-    """How the harness session *ended*, observed at harvest (see ADR-0014).
+    """How the harness session *ended*, observed at harvest (see ADR-0015).
 
     Not a quality judgment: whether the task's done-condition was met is a
     separate verdict produced later by paws/survey.

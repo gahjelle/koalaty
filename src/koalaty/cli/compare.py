@@ -2,7 +2,7 @@
 
 Sits alongside `koalaty.compare` (the grid module it delegates to); this is the
 CLI face of the comparison feed. The pouch is read from `config.pouch` at call
-time (see ADR-0010) rather than taken as a CLI flag.
+time (see ADR-0011) rather than taken as a CLI flag.
 """
 
 from koalaty import pouch

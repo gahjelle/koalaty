@@ -109,7 +109,7 @@ def start_manual(
     """Start a manual run: mint an id, write `pending.json`, return setup instructions.
 
     Asks the adapter for harness-specific setup instructions but never invokes
-    the harness — a human drives the session by hand (see ADR-0009). The run's
+    the harness — a human drives the session by hand (see ADR-0010). The run's
     driver is recorded as `human`. `interactive` tasks are accepted. `joey` marks
     the pending run as a throwaway trial. Returns the written `PendingRun` and the
     instructions to show the human.
@@ -149,7 +149,7 @@ def harvest_manual(
     """Complete a pending manual run by harvesting its externally-supplied session.
 
     Loads the pending run, hands `session_id` to the adapter, runs the survey
-    through the injected `ask` (manual runs carry a survey; see ADR-0009),
+    through the injected `ask` (manual runs carry a survey; see ADR-0010),
     assembles the Result (driver `human`, task/harness/model/turns/tags from the
     pending run), writes its run directory, and removes `pending.json`. An
     unknown or already-harvested run id raises `HarvestError` and writes nothing.
