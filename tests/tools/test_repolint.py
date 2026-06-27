@@ -211,3 +211,31 @@ def test_clean_adr_directory_has_no_violations(tmp_path: Path) -> None:
     names = ["0001-alpha.md", "0002-beta.md", "0003-gamma.md"]
 
     assert _adr_codes(tmp_path, names) == set()
+
+
+def test_flags_bare_dataclass_without_kw_only() -> None:
+    """A bare `@dataclass` (fields passable positionally) is KOA012."""
+    source = "@dataclass\nclass Thing:\n    a: int\n"
+
+    assert "KOA012" in _codes(source)
+
+
+def test_flags_parametrized_dataclass_without_kw_only() -> None:
+    """`@dataclass(frozen=True)` without `kw_only` is still KOA012."""
+    source = "@dataclass(frozen=True)\nclass Thing:\n    a: int\n"
+
+    assert "KOA012" in _codes(source)
+
+
+def test_allows_kw_only_dataclass() -> None:
+    """`@dataclass(kw_only=True)` satisfies KOA012."""
+    source = "@dataclass(frozen=True, kw_only=True)\nclass Thing:\n    a: int\n"
+
+    assert "KOA012" not in _codes(source)
+
+
+def test_ignores_non_dataclass_decorator() -> None:
+    """A class with an unrelated decorator is not KOA012."""
+    source = "@cache\nclass Thing:\n    a: int\n"
+
+    assert "KOA012" not in _codes(source)

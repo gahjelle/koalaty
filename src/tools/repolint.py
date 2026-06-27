@@ -13,6 +13,7 @@ Encodes the rules in the `repo-coding-conventions` policy:
   KOA009  at most 3 positional parameters — use keyword-only args beyond that
   KOA010  no duplicate numeric prefixes among `docs/adr/` filenames
   KOA011  ADR numbers are consecutive from `0001` with no gaps
+  KOA012  `@dataclass` is `kw_only=True` so fields can't be passed positionally
 
 Run: `uv run python -m tools.repolint [paths...]` (defaults to `src/` and `tests/`).
 Pass `--fix` to auto-apply the safe textual fixes (KOA001, KOA004).
@@ -63,7 +64,7 @@ def _load_exempt_modules() -> frozenset[str]:
 EXEMPT_MODULES = _load_exempt_modules()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Violation:
     """A single convention breach at a source location."""
 
@@ -111,11 +112,11 @@ def _check_future_import(tree: ast.Module, path: Path) -> Iterator[Violation]:
             and any(alias.name == "annotations" for alias in node.names)
         ):
             yield Violation(
-                path,
-                node.lineno,
-                node.col_offset + 1,
-                "KOA001",
-                "remove `from __future__ import annotations`",
+                path=path,
+                line=node.lineno,
+                col=node.col_offset + 1,
+                code="KOA001",
+                message="remove `from __future__ import annotations`",
             )
 
 
@@ -128,14 +129,12 @@ def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
             continue
         if any(_is_named(base, "BaseModel") for base in node.bases):
             yield Violation(
-                path,
-                node.lineno,
-                node.col_offset + 1,
-                "KOA002",
-                (
-                    f"`{node.name}` must subclass `StrictModel` or `FrozenModel`,"
-                    " not `BaseModel`"
-                ),
+                path=path,
+                line=node.lineno,
+                col=node.col_offset + 1,
+                code="KOA002",
+                message=f"`{node.name}` must subclass `StrictModel` or `FrozenModel`,"
+                " not `BaseModel`",
             )
 
 
@@ -161,11 +160,11 @@ def _ellipsis_in_method(
             and stmt.value.value is Ellipsis
         ):
             yield Violation(
-                path,
-                stmt.lineno,
-                stmt.col_offset + 1,
-                "KOA003",
-                "drop `...` from the Protocol method; the docstring is enough",
+                path=path,
+                line=stmt.lineno,
+                col=stmt.col_offset + 1,
+                code="KOA003",
+                message="drop `...` from the Protocol method; the docstring is enough",
             )
 
 
@@ -176,11 +175,11 @@ def _check_double_backticks(tree: ast.Module, path: Path) -> Iterator[Violation]
             continue
         if DOUBLE_BACKTICK in doc.value:
             yield Violation(
-                path,
-                doc.lineno,
-                doc.col_offset + 1,
-                "KOA004",
-                "use single backticks in docstrings, not double",
+                path=path,
+                line=doc.lineno,
+                col=doc.col_offset + 1,
+                code="KOA004",
+                message="use single backticks in docstrings, not double",
             )
 
 
@@ -194,11 +193,11 @@ def _check_homogeneous_tuple(tree: ast.Module, path: Path) -> Iterator[Violation
             for elt in sliced.elts
         ):
             yield Violation(
-                path,
-                node.lineno,
-                node.col_offset + 1,
-                "KOA005",
-                "use `list[T]` for homogeneous sequences, not `tuple[T, ...]`",
+                path=path,
+                line=node.lineno,
+                col=node.col_offset + 1,
+                code="KOA005",
+                message="use `list[T]` for homogeneous sequences, not `tuple[T, ...]`",
             )
 
 
@@ -212,11 +211,11 @@ def _check_self_forward_ref(tree: ast.Module, path: Path) -> Iterator[Violation]
             returns = method.returns
             if isinstance(returns, ast.Constant) and returns.value == cls.name:
                 yield Violation(
-                    path,
-                    returns.lineno,
-                    returns.col_offset + 1,
-                    "KOA006",
-                    f'return `Self`, not the forward-ref `"{cls.name}"`',
+                    path=path,
+                    line=returns.lineno,
+                    col=returns.col_offset + 1,
+                    code="KOA006",
+                    message=f'return `Self`, not the forward-ref `"{cls.name}"`',
                 )
 
 
@@ -229,11 +228,13 @@ def _check_exempt_in_type_checking(tree: ast.Module, path: Path) -> Iterator[Vio
         for stmt in node.body:
             if isinstance(stmt, ast.ImportFrom) and stmt.module in EXEMPT_MODULES:
                 yield Violation(
-                    path,
-                    stmt.lineno,
-                    stmt.col_offset + 1,
-                    "KOA008",
-                    f"move `{stmt.module}` out of TYPE_CHECKING; ruff exempts it",
+                    path=path,
+                    line=stmt.lineno,
+                    col=stmt.col_offset + 1,
+                    code="KOA008",
+                    message=(
+                        f"move `{stmt.module}` out of TYPE_CHECKING; ruff exempts it"
+                    ),
                 )
 
 
@@ -255,15 +256,45 @@ def _check_positional_args(tree: ast.Module, path: Path) -> Iterator[Violation]:
             positional = positional[1:]
         if len(positional) > MAX_POSITIONAL_ARGS:
             yield Violation(
-                path,
-                node.lineno,
-                node.col_offset + 1,
-                "KOA009",
-                (
-                    f"too many positional args ({len(positional)}"
-                    f" > {MAX_POSITIONAL_ARGS}); use * to make some keyword-only"
-                ),
+                path=path,
+                line=node.lineno,
+                col=node.col_offset + 1,
+                code="KOA009",
+                message=f"too many positional args ({len(positional)}"
+                f" > {MAX_POSITIONAL_ARGS}); use * to make some keyword-only",
             )
+
+
+def _has_kw_only_true(keywords: list[ast.keyword]) -> bool:
+    """Report whether `kw_only=True` appears among the decorator keywords."""
+    return any(
+        kw.arg == "kw_only"
+        and isinstance(kw.value, ast.Constant)
+        and kw.value.value is True
+        for kw in keywords
+    )
+
+
+def _check_dataclass_kw_only(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for decorator in node.decorator_list:
+            target = decorator.func if isinstance(decorator, ast.Call) else decorator
+            if not _is_named(target, "dataclass"):
+                continue
+            keywords = decorator.keywords if isinstance(decorator, ast.Call) else []
+            if not _has_kw_only_true(keywords):
+                yield Violation(
+                    path=path,
+                    line=node.lineno,
+                    col=node.col_offset + 1,
+                    code="KOA012",
+                    message=(
+                        "decorate `@dataclass(kw_only=True)` so fields"
+                        " can't be passed positionally"
+                    ),
+                )
 
 
 CHECKS = (
@@ -275,6 +306,7 @@ CHECKS = (
     _check_self_forward_ref,
     _check_exempt_in_type_checking,
     _check_positional_args,
+    _check_dataclass_kw_only,
 )
 
 
@@ -288,11 +320,11 @@ def _check_possessive_prefix(source: str, path: Path) -> Iterator[Violation]:
     for match in MY_PREFIX_RE.finditer(source):
         line, col = _line_col_of(source, match.start())
         yield Violation(
-            path,
-            line,
-            col,
-            "KOA007",
-            "drop the possessive `my` prefix; it models bad names for users",
+            path=path,
+            line=line,
+            col=col,
+            code="KOA007",
+            message="drop the possessive `my` prefix; it models bad names for users",
         )
 
 
@@ -311,11 +343,11 @@ def _check_duplicate_prefixes(
     for number, path in numbered:
         if counts[number] > 1:
             yield Violation(
-                path,
-                1,
-                1,
-                "KOA010",
-                f"duplicate ADR number {number:04d};"
+                path=path,
+                line=1,
+                col=1,
+                code="KOA010",
+                message=f"duplicate ADR number {number:04d};"
                 " each ADR file needs a unique numeric prefix",
             )
 
@@ -331,11 +363,11 @@ def _check_consecutive_numbering(
     if present != expected:
         got = ", ".join(f"{number:04d}" for number in present)
         yield Violation(
-            adr_dir,
-            1,
-            1,
-            "KOA011",
-            f"ADR numbers must be consecutive from 0001 with no gaps;"
+            path=adr_dir,
+            line=1,
+            col=1,
+            code="KOA011",
+            message=f"ADR numbers must be consecutive from 0001 with no gaps;"
             f" got {got}, expected 0001\N{EN DASH}{len(present):04d}",
         )
 

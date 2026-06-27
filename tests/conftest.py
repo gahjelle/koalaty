@@ -44,7 +44,7 @@ class StubAsker:
         return self.notes
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SurveyStub:
     """Configurable survey answers a test can tweak before harvesting."""
 

@@ -63,6 +63,14 @@ rule and how to satisfy it:
   Both are drift from the sequential convention in
   [domain.md](./domain.md). Unlike the other rules, KOA010/KOA011 scan the
   `docs/adr/` directory rather than the files passed on the command line.
+- **KOA012 — `@dataclass` must pass `kw_only=True`.** Stdlib dataclasses
+  otherwise accept fields positionally, so a multi-field value object gets
+  built as `Thing(a, b, c, …)` — the same hard-to-read positional soup KOA009
+  guards against at the definition. Making the dataclass `kw_only` forces every
+  call site to name its fields, and `ty` flags any positional construction for
+  free. (Pydantic `FrozenModel`/`StrictModel` already reject positional args,
+  so KOA002's models need nothing extra; this rule covers the stdlib
+  `@dataclass` that KOA002 doesn't.)
 
 ## Style
 
