@@ -220,6 +220,13 @@ def test_flags_bare_dataclass_without_kw_only() -> None:
     assert "KOA012" in _codes(source)
 
 
+def test_flags_empty_call_dataclass_without_kw_only() -> None:
+    """`@dataclass()` with no arguments is still KOA012."""
+    source = "@dataclass()\nclass Thing:\n    a: int\n"
+
+    assert "KOA012" in _codes(source)
+
+
 def test_flags_parametrized_dataclass_without_kw_only() -> None:
     """`@dataclass(frozen=True)` without `kw_only` is still KOA012."""
     source = "@dataclass(frozen=True)\nclass Thing:\n    a: int\n"
