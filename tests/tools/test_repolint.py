@@ -16,10 +16,12 @@ HERE = Path("sample.py")
 
 
 def _codes(source: str) -> set[str]:
+    """Return the set of violation codes `check_source` raises for `source`."""
     return {v.code for v in check_source(source, HERE)}
 
 
 def _text_codes(source: str) -> set[str]:
+    """Return the set of violation codes `check_text` raises for `source`."""
     return {v.code for v in check_text(source, HERE)}
 
 
@@ -180,6 +182,7 @@ def test_allows_non_exempt_module_in_type_checking() -> None:
 
 
 def _adr_codes(adr_dir: Path, names: list[str]) -> set[str]:
+    """Create `names` in `adr_dir` and return the ADR numbering codes raised."""
     for name in names:
         (adr_dir / name).write_text("", encoding="utf-8")
     return {v.code for v in check_adr_numbering(adr_dir)}
@@ -246,3 +249,31 @@ def test_ignores_non_dataclass_decorator() -> None:
     source = "@cache\nclass Thing:\n    a: int\n"
 
     assert "KOA012" not in _codes(source)
+
+
+def test_flags_function_without_docstring() -> None:
+    """A function with no docstring is KOA013."""
+    source = "def f() -> int:\n    return 1\n"
+
+    assert "KOA013" in _codes(source)
+
+
+def test_flags_nested_function_without_docstring() -> None:
+    """A nested function with no docstring is also KOA013."""
+    source = (
+        '"""Module."""\n'
+        "def outer() -> int:\n"
+        '    """Do outer."""\n'
+        "    def inner() -> int:\n"
+        "        return 1\n"
+        "    return inner()\n"
+    )
+
+    assert "KOA013" in _codes(source)
+
+
+def test_allows_function_with_docstring() -> None:
+    """A function with a docstring satisfies KOA013."""
+    source = 'def f() -> int:\n    """Return one."""\n    return 1\n'
+
+    assert "KOA013" not in _codes(source)

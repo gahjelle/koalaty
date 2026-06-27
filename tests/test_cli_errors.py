@@ -31,6 +31,7 @@ def test_genuine_bug_still_raises_traceback(
     """A non-KoalatyError escapes the launcher uncaught, keeping bugs debuggable."""
 
     def boom(*_args: object, **_kwargs: object) -> object:
+        """Raise a non-Koalaty error to stand in for a genuine bug."""
         msg = "a genuine bug"
         raise RuntimeError(msg)
 

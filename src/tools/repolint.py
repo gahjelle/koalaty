@@ -14,6 +14,7 @@ Encodes the rules in the `repo-coding-conventions` policy:
   KOA010  no duplicate numeric prefixes among `docs/adr/` filenames
   KOA011  ADR numbers are consecutive from `0001` with no gaps
   KOA012  `@dataclass` is `kw_only=True` so fields can't be passed positionally
+  KOA013  every function/method/nested function has a docstring
 
 Run: `uv run python -m tools.repolint [paths...]` (defaults to `src/` and `tests/`).
 Pass `--fix` to auto-apply the safe textual fixes (KOA001, KOA004).
@@ -105,6 +106,7 @@ def _line_col_of(source: str, pos: int) -> tuple[int, int]:
 
 
 def _check_future_import(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag `from __future__ import annotations` (KOA001)."""
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.ImportFrom)
@@ -121,6 +123,7 @@ def _check_future_import(tree: ast.Module, path: Path) -> Iterator[Violation]:
 
 
 def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag a model inheriting `BaseModel` directly (KOA002)."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef) or node.name in {
             "FrozenModel",
@@ -139,6 +142,7 @@ def _check_strict_model(tree: ast.Module, path: Path) -> Iterator[Violation]:
 
 
 def _check_protocol_ellipsis(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag `...` bodies in Protocol methods (KOA003)."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef):
             continue
@@ -153,6 +157,7 @@ def _ellipsis_in_method(
     method: ast.FunctionDef | ast.AsyncFunctionDef,
     path: Path,
 ) -> Iterator[Violation]:
+    """Yield a KOA003 for each `...` statement in one Protocol method."""
     for stmt in method.body:
         if (
             isinstance(stmt, ast.Expr)
@@ -169,6 +174,7 @@ def _ellipsis_in_method(
 
 
 def _check_double_backticks(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag double backticks in docstrings (KOA004)."""
     for node in ast.walk(tree):
         doc = _docstring_node(node)
         if doc is None or not isinstance(doc.value, str):
@@ -184,6 +190,7 @@ def _check_double_backticks(tree: ast.Module, path: Path) -> Iterator[Violation]
 
 
 def _check_homogeneous_tuple(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag `tuple[T, ...]` annotations (KOA005)."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.Subscript) or not _is_named(node.value, "tuple"):
             continue
@@ -202,6 +209,7 @@ def _check_homogeneous_tuple(tree: ast.Module, path: Path) -> Iterator[Violation
 
 
 def _check_self_forward_ref(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag a string forward-ref return to the enclosing class (KOA006)."""
     for cls in ast.walk(tree):
         if not isinstance(cls, ast.ClassDef):
             continue
@@ -220,6 +228,7 @@ def _check_self_forward_ref(tree: ast.Module, path: Path) -> Iterator[Violation]
 
 
 def _check_exempt_in_type_checking(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag a ruff-exempt module imported under `TYPE_CHECKING` (KOA008)."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.If):
             continue
@@ -242,6 +251,7 @@ MAX_POSITIONAL_ARGS = 3
 
 
 def _check_positional_args(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag functions with more than 3 positional parameters (KOA009)."""
     class_parents: dict[int, type[ast.AST]] = {}
     for parent in ast.walk(tree):
         for child in ast.iter_child_nodes(parent):
@@ -276,6 +286,7 @@ def _has_kw_only_true(keywords: list[ast.keyword]) -> bool:
 
 
 def _check_dataclass_kw_only(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag a `@dataclass` that isn't `kw_only=True` (KOA012)."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef):
             continue
@@ -297,6 +308,22 @@ def _check_dataclass_kw_only(tree: ast.Module, path: Path) -> Iterator[Violation
                 )
 
 
+def _check_missing_docstring(tree: ast.Module, path: Path) -> Iterator[Violation]:
+    """Flag any function/method/nested function lacking a docstring (KOA013)."""
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+            and ast.get_docstring(node) is None
+        ):
+            yield Violation(
+                path=path,
+                line=node.lineno,
+                col=node.col_offset + 1,
+                code="KOA013",
+                message=f"add a one-line docstring to `{node.name}`",
+            )
+
+
 CHECKS = (
     _check_future_import,
     _check_strict_model,
@@ -307,6 +334,7 @@ CHECKS = (
     _check_exempt_in_type_checking,
     _check_positional_args,
     _check_dataclass_kw_only,
+    _check_missing_docstring,
 )
 
 
@@ -317,6 +345,7 @@ def check_source(source: str, path: Path) -> list[Violation]:
 
 
 def _check_possessive_prefix(source: str, path: Path) -> Iterator[Violation]:
+    """Flag a possessive `my` prefix anywhere in the text (KOA007)."""
     for match in MY_PREFIX_RE.finditer(source):
         line, col = _line_col_of(source, match.start())
         yield Violation(
@@ -339,6 +368,7 @@ def check_text(source: str, path: Path) -> list[Violation]:
 def _check_duplicate_prefixes(
     numbered: list[tuple[int, Path]],
 ) -> Iterator[Violation]:
+    """Yield a KOA010 for each ADR file sharing a number with another."""
     counts = Counter(number for number, _ in numbered)
     for number, path in numbered:
         if counts[number] > 1:
@@ -356,6 +386,7 @@ def _check_consecutive_numbering(
     numbered: list[tuple[int, Path]],
     adr_dir: Path,
 ) -> Iterator[Violation]:
+    """Yield a KOA011 when ADR numbers aren't a gapless run from `0001`."""
     present = sorted({number for number, _ in numbered})
     if not present:
         return

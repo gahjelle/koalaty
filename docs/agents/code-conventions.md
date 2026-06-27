@@ -10,7 +10,7 @@
 
 - **ruff** with `select = ["ALL"]` and ignores `COM812`, `D203`, `D213`.
 - Per-file test ignores: `S101`, `PLR2004`, `SLF001`, `INP001`.
-- Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this).
+- Every public module, class, and function **must have a docstring** (ruff `D` rules enforce this). Functions and methods go further — *every* one needs at least a one-line docstring, including `_`-prefixed and nested functions that ruff's `D` rules leave alone (enforced by KOA013 below).
 - Full **type annotations** are required on all public APIs (ruff `ANN` rules enforce this).
 - Never blanket-ignore the linter with `# noqa` — fix the issue or use a targeted `# noqa: CODE` with a comment explaining why.
 - For intentional Unicode characters that trigger RUF001 (ambiguous characters), use `\N{name}` escapes (e.g., `\N{EN DASH}`) instead of the literal character or `\u` escapes. This is self-documenting and avoids the noqa entirely.
@@ -71,6 +71,12 @@ rule and how to satisfy it:
   free. (Pydantic `FrozenModel`/`StrictModel` already reject positional args,
   so KOA002's models need nothing extra; this rule covers the stdlib
   `@dataclass` that KOA002 doesn't.)
+- **KOA013 — every function/method has a docstring.** At least a one-line
+  docstring on *every* `def`/`async def`, including `_`-prefixed helpers and
+  nested functions. ruff's pydocstyle `D` rules only require docstrings on
+  *public* names, so private and nested functions slip through; KOA013 closes
+  that gap. The name plus a behavioral one-liner keeps even tiny helpers
+  self-explanatory.
 
 ## Style
 
